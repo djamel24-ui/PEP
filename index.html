@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Language Centre — Quote Builder</title>
+<style>
+  :root{
+    --navy:#14213D;
+    --navy-light:#1E2E52;
+    --red:#A31E2E;
+    --red-light:#F6E4E6;
+    --cream:#FBF9F5;
+    --border:#E4DFD5;
+    --text:#2B2B2B;
+    --muted:#6B6B6B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    font-family:Arial, 'Segoe UI', Tahoma, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    color:var(--text);
+  }
+  .page{ max-width:920px; margin:0 auto; padding:32px 20px 80px; }
+
+  .lang-switch{
+    display:flex; justify-content:center; gap:6px; margin-bottom:18px;
+  }
+  .lang-switch button{
+    border:1.5px solid var(--border);
+    background:#fff;
+    color:var(--navy);
+    font-size:12.5px;
+    font-weight:700;
+    padding:6px 14px;
+    border-radius:20px;
+    cursor:pointer;
+  }
+  .lang-switch button.active{
+    background:var(--navy);
+    color:#fff;
+    border-color:var(--navy);
+  }
+
+  header.top{ text-align:center; margin-bottom:28px; }
+  header.top .badge{
+    display:inline-block; font-size:11px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--red); font-weight:700; margin-bottom:6px;
+  }
+  header.top h1{ font-family:Georgia, serif; font-size:30px; color:var(--navy); margin:0 0 8px; }
+  header.top p{ color:var(--muted); font-size:14px; max-width:560px; margin:0 auto; }
+
+  .step{ background:#fff; border:1px solid var(--border); border-radius:10px; padding:22px 24px; margin-bottom:18px; }
+  .step h2{ font-size:14px; letter-spacing:0.5px; text-transform:uppercase; color:var(--navy); margin:0 0 4px; }
+  .step .hint{ font-size:12.5px; color:var(--muted); margin:0 0 16px; }
+
+  .cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:12px; }
+  .card{ border:1.5px solid var(--border); border-radius:8px; padding:14px 16px; cursor:pointer; transition:border-color .15s, background .15s; background:#fff; }
+  .card:hover{ border-color:#c9c2b3; }
+  .card.selected{ border-color:var(--red); background:var(--red-light); }
+  .card .name{ font-weight:700; color:var(--navy); font-size:14.5px; margin-bottom:3px;}
+  .card .meta{ font-size:12px; color:var(--muted); line-height:1.5; }
+  .card .price{ font-weight:700; color:var(--red); font-size:13.5px; margin-top:6px; }
+
+  .row{ display:flex; gap:16px; flex-wrap:wrap; }
+  .field{ flex:1; min-width:180px; }
+  .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:5px; font-weight:600; }
+  select, input[type="text"]{ width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:6px; font-size:14px; background:#fff; color:var(--text); font-family:inherit; }
+
+  .hidden{ display:none !important; }
+
+  .checkbox-row{ display:flex; align-items:center; gap:8px; margin-top:6px; font-size:13.5px; }
+
+  .summary{
+    background:var(--navy); color:#fff; border-radius:10px; padding:22px 24px;
+    position:sticky; bottom:16px; box-shadow:0 6px 24px rgba(20,33,61,0.35);
+  }
+  .summary h2{ font-size:13px; letter-spacing:1px; text-transform:uppercase; color:#C9D2E3; margin:0 0 12px; }
+  .line{ display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.08); gap:12px; }
+  .line .l{ color:#DCE3F0; }
+  .line .r{ font-weight:600; white-space:nowrap; }
+  .line.total{ border-bottom:none; margin-top:6px; padding-top:12px; border-top:1.5px solid rgba(255,255,255,0.25); font-size:18px; }
+  .line.total .l{ color:#fff; font-weight:700; }
+  .line.total .r{ color:#FFC9B8; font-weight:800; }
+  .empty-note{ color:#B7C1D6; font-size:13px; font-style:italic; }
+
+  .doc-fields{ margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.12); }
+  .doc-fields .field label{ color:#C9D2E3; }
+
+  .doctype-switch{ display:flex; gap:6px; margin-top:14px; flex-wrap:wrap; }
+  .doctype-switch button{
+    flex:1; min-width:100px; border:1.5px solid rgba(255,255,255,0.25); background:transparent; color:#DCE3F0;
+    font-size:12.5px; font-weight:700; padding:9px 10px; border-radius:8px; cursor:pointer;
+  }
+  .doctype-switch button.active{ background:var(--red); color:#fff; border-color:var(--red); }
+
+  .btn-generate{
+    display:block; width:100%; margin-top:16px; background:var(--red); color:#fff; border:none;
+    padding:14px; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:0.3px;
+  }
+  .btn-generate:disabled{ background:#5c6478; cursor:not-allowed; }
+  .btn-generate:not(:disabled):hover{ background:#8B192A; }
+
+  #printArea, #printAreaBiz{ display:none; }
+  @media print{
+    .app-screen{ display:none !important; }
+    #printArea.show{ display:block !important; }
+    #printAreaBiz.show{ display:block !important; }
+    .print-doc{ position:static; width:auto; padding:0; }
+  }
+  .quote-doc, .biz-doc{ -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
+  .quote-doc{ font-family:Georgia, 'PingFang SC', 'Microsoft YaHei', serif; color:#222; max-width:700px; margin:0 auto; padding:30px; }
+  .quote-doc .qhead{ border-bottom:4px solid var(--red); padding-bottom:14px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-end; gap:12px; }
+  .quote-doc .qhead .brand{ font-size:20px; font-weight:700; color:var(--navy); }
+  .quote-doc .qhead .meta{ text-align:end; font-family:Arial,sans-serif; font-size:11.5px; color:#666; }
+  .quote-doc h3{ font-family:Arial,sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--red); margin:22px 0 8px; }
+  .quote-doc table{ width:100%; border-collapse:collapse; font-family:Arial,sans-serif; font-size:13px; }
+  .quote-doc td{ padding:7px 0; border-bottom:1px solid #eee; }
+  .quote-doc td.amt{ text-align:end; font-weight:600; }
+  .quote-doc .grand{ font-size:16px; font-weight:700; color:var(--red); border-top:2px solid var(--navy); padding-top:10px; }
+  .quote-doc .footnote{ font-family:Arial,sans-serif; font-size:10.5px; color:#888; margin-top:26px; line-height:1.6; border-top:1px solid #eee; padding-top:12px; }
+  .quote-doc ul{ font-family:Arial,sans-serif; font-size:12.5px; line-height:1.8; margin:0; padding-inline-start:18px; }
+
+  html[dir="rtl"] .quote-doc td.amt{ text-align:start; }
+  html[dir="rtl"] .quote-doc .qhead .meta{ text-align:start; }
+
+  /* ---- Invoice / Receipt document ---- */
+  .biz-doc{ font-family:Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; color:#222; max-width:760px; margin:0 auto; padding:30px; position:relative; }
+  .biz-doc .bhead{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:26px; gap:16px; }
+  .biz-doc .bhead .doctitle{ font-size:26px; font-weight:800; color:var(--red); }
+  .biz-doc .bhead .logo{ text-align:end; }
+  .biz-doc .bhead .logo .lname{ font-size:15px; font-weight:800; color:var(--navy); letter-spacing:0.3px; }
+  .biz-doc .bhead .logo .ltag{ font-size:10.5px; color:#888; font-style:italic; margin-top:2px; }
+  .biz-doc .billto{ border-top:2.5px solid var(--red); border-bottom:1px solid #eee; padding:14px 0; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .biz-doc .billto .label{ font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:#999; margin-bottom:4px; }
+  .biz-doc .billto .name{ font-size:14px; font-weight:700; color:var(--navy); }
+  .biz-doc .billto .passport{ font-size:12px; color:#666; margin-top:2px; }
+  .biz-doc .paybox-row{ display:flex; gap:10px; margin:16px 0 22px; flex-wrap:wrap; }
+  .biz-doc .paybox{ flex:1; min-width:150px; border-radius:6px; padding:12px 14px; text-align:center; }
+  .biz-doc .paybox.mid{ background:var(--red); color:#fff; }
+  .biz-doc .paybox:not(.mid){ background:var(--red-light); color:var(--navy); }
+  .biz-doc .paybox .pblabel{ font-size:10px; letter-spacing:1px; text-transform:uppercase; opacity:0.85; margin-bottom:4px; }
+  .biz-doc .paybox .pbvalue{ font-size:14.5px; font-weight:800; }
+  .biz-doc table.bitems{ width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:6px; }
+  .biz-doc table.bitems th{ text-align:start; font-size:10px; letter-spacing:0.8px; text-transform:uppercase; color:#999; border-bottom:2px solid #eee; padding:6px 4px; }
+  .biz-doc table.bitems td{ padding:8px 4px; border-bottom:1px solid #f1f1f1; vertical-align:top; }
+  .biz-doc table.bitems th.num, .biz-doc table.bitems td.num{ text-align:end; white-space:nowrap; }
+  .biz-doc table.bitems td.act{ font-weight:700; color:var(--navy); }
+  .biz-doc table.bitems td.desc{ color:#555; }
+  .biz-doc .btotal-row{ display:flex; justify-content:space-between; align-items:center; border-top:2px solid var(--navy); padding-top:10px; margin-top:4px; }
+  .biz-doc .btotal-row .tlabel{ font-size:12.5px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.5px; }
+  .biz-doc .btotal-row .tvalue{ font-size:19px; font-weight:800; color:var(--red); }
+  .biz-doc .paidstamp{ position:absolute; top:120px; inset-inline-end:40px; border:3px solid #2E8B57; color:#2E8B57; font-weight:800; font-size:22px; padding:6px 18px; border-radius:8px; transform:rotate(-12deg); opacity:0.85; letter-spacing:2px; }
+  .biz-doc .bpayment{ margin-top:24px; font-size:12px; color:#444; line-height:1.7; }
+  .biz-doc .bpayment .bpheading{ font-weight:700; color:var(--navy); margin-bottom:4px; }
+  .biz-doc .bfooter{ font-family:Arial,sans-serif; font-size:10px; color:#999; margin-top:30px; padding-top:14px; border-top:1px solid #eee; text-align:center; line-height:1.7; }
+
+  html[dir="rtl"] .biz-doc .logo{ text-align:start; }
+  html[dir="rtl"] .biz-doc table.bitems th.num, html[dir="rtl"] .biz-doc table.bitems td.num{ text-align:start; }
+</style>
+</head>
+<body id="bodyRoot">
+
+<div class="app-screen">
+<div class="page">
+  <div class="lang-switch" id="langSwitch">
+    <button data-lang="en">EN</button>
+    <button data-lang="ar">عربي</button>
+    <button data-lang="zh">中文</button>
+    <button data-lang="fr">FR</button>
+  </div>
+
+  <header class="top">
+    <div class="badge" data-i18n="badge"></div>
+    <h1 data-i18n="title"></h1>
+    <p data-i18n="subtitle"></p>
+  </header>
+
+  <div class="step">
+    <h2 data-i18n="step1_heading"></h2>
+    <p class="hint" data-i18n="step1_hint"></p>
+    <div class="cards" id="programmeCards"></div>
+  </div>
+
+  <div class="step hidden" id="pepSection">
+    <h2 data-i18n="step2_pep_heading"></h2>
+    <p class="hint" data-i18n="step2_pep_hint"></p>
+    <div class="row">
+      <div class="field">
+        <label data-i18n="label_start_level"></label>
+        <select id="startLevel"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="label_target_level"></label>
+        <select id="targetLevel"></select>
+      </div>
+    </div>
+
+    <h2 style="margin-top:22px;" data-i18n="step3_heading"></h2>
+    <div class="cards" id="modeCards"></div>
+
+    <div id="trackWrap" class="hidden">
+      <h2 style="margin-top:22px;" data-i18n="step4_heading"></h2>
+      <p class="hint" data-i18n="step4_hint"></p>
+      <div class="cards" id="trackCards"></div>
+
+      <div class="checkbox-row" id="visaOptionRow" style="margin-top:14px;">
+        <input type="checkbox" id="needVisa" checked>
+        <label for="needVisa" data-i18n="need_visa_label"></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="step hidden" id="examSection">
+    <h2 data-i18n="examstep2_heading"></h2>
+    <div class="cards" id="examCards"></div>
+
+    <div id="examSpecificWrap" class="hidden" style="margin-top:18px;">
+      <div class="field" style="max-width:280px;">
+        <label data-i18n="label_which_exam"></label>
+        <select id="examSpecific"></select>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="examRegOption">
+        <label for="examRegOption" data-i18n="examreg_checkbox_label"></label>
+      </div>
+      <p class="hint" style="margin-top:8px;" data-i18n="hint_reg_fee"></p>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="edutourism">
+      <label for="edutourism" data-i18n="edutourism_label"></label>
+    </div>
+  </div>
+
+  <div class="summary">
+    <h2 data-i18n="summary_heading"></h2>
+    <div id="summaryLines"><div class="empty-note" data-i18n="summary_empty"></div></div>
+
+    <div class="doc-fields">
+      <div class="row">
+        <div class="field">
+          <label data-i18n="label_student_name"></label>
+          <input type="text" id="studentName">
+        </div>
+        <div class="field">
+          <label data-i18n="label_passport_no"></label>
+          <input type="text" id="passportNo">
+        </div>
+      </div>
+      <div class="field hidden" style="max-width:220px; margin-top:12px;" id="docNumberWrap">
+        <label data-i18n="label_doc_number"></label>
+        <input type="text" id="docNumber">
+      </div>
+    </div>
+
+    <div class="doctype-switch" id="docTypeSwitch">
+      <button type="button" data-doctype="quote" class="active" data-i18n="doctype_quote"></button>
+      <button type="button" data-doctype="invoice" data-i18n="doctype_invoice"></button>
+      <button type="button" data-doctype="receipt" data-i18n="doctype_receipt"></button>
+    </div>
+
+    <button class="btn-generate" id="generateBtn" disabled data-i18n="btn_generate"></button>
+  </div>
+</div>
+
+</div>
+
+<div id="printArea" class="print-doc">
+  <div class="quote-doc">
+    <div class="qhead">
+      <div class="brand" data-i18n="badge"></div>
+      <div class="meta">
+        <span data-i18n="print_quote_date"></span> <span id="pQuoteDate"></span><br>
+        <span data-i18n="print_valid"></span>
+      </div>
+    </div>
+    <h3 data-i18n="print_selection_summary"></h3>
+    <div id="pSelectionSummary" style="font-family:Arial,sans-serif;font-size:13px;margin-bottom:6px;"></div>
+
+    <h3 data-i18n="print_schedule"></h3>
+    <table id="pSchedule"></table>
+
+    <h3 data-i18n="print_curriculum"></h3>
+    <div id="pCurriculum" style="font-family:Arial,sans-serif;font-size:12.5px;line-height:1.7;"></div>
+
+    <h3 data-i18n="print_price_breakdown"></h3>
+    <table id="pTable"></table>
+
+    <h3 data-i18n="print_includes"></h3>
+    <ul id="pIncludes"></ul>
+
+    <div class="footnote">
+      <span id="pFootnote"></span><br><br>
+      +60 16-900 0098 · inquiry@premium.edu.my · premium.edu.my
+    </div>
+  </div>
+</div>
+
+<div id="printAreaBiz" class="print-doc">
+  <div class="biz-doc">
+    <div class="paidstamp hidden" id="bizPaidStamp" data-i18n="paid_stamp"></div>
+    <div class="bhead">
+      <div class="doctitle" id="bizDocTitle"></div>
+      <div class="logo">
+        <div class="lname">PREMIUM ENTREPRENEUR CONSULTANT <span style="font-size:10px;">SDN BHD</span></div>
+        <div class="ltag" data-i18n="logo_tagline"></div>
+      </div>
+    </div>
+
+    <div class="billto">
+      <div>
+        <div class="label" data-i18n="bill_to_label"></div>
+        <div class="name" id="bizBillName"></div>
+        <div class="passport" id="bizBillPassport"></div>
+      </div>
+    </div>
+
+    <div class="paybox-row">
+      <div class="paybox">
+        <div class="pblabel" data-i18n="date_label"></div>
+        <div class="pbvalue" id="bizDate"></div>
+      </div>
+      <div class="paybox mid">
+        <div class="pblabel" id="bizMidLabel"></div>
+        <div class="pbvalue" id="bizMidValue"></div>
+      </div>
+      <div class="paybox">
+        <div class="pblabel" id="bizRightLabel"></div>
+        <div class="pbvalue" id="bizRightValue"></div>
+      </div>
+    </div>
+
+    <table class="bitems">
+      <thead>
+        <tr>
+          <th data-i18n="col_activity"></th>
+          <th data-i18n="col_description"></th>
+          <th class="num" data-i18n="col_qty"></th>
+          <th class="num" data-i18n="col_rate"></th>
+          <th class="num" data-i18n="col_amount"></th>
+        </tr>
+      </thead>
+      <tbody id="bizTableBody"></tbody>
+    </table>
+    <div class="btotal-row">
+      <div class="tlabel" id="bizTotalLabel"></div>
+      <div class="tvalue" id="bizTotalValue"></div>
+    </div>
+
+    <div class="bpayment">
+      <div class="bpheading" id="bizPaymentHeading"></div>
+      Premium Entrepreneur Consultant Sdn. Bhd.<br>
+      Account No: 5640 8950 7829<br>
+      SWIFT Code: MBBEMYKLBBG<br>
+      Bank Name: Malayan Banking Berhad - MayBank<br>
+      Bank Address: No. 42-2, Ground &amp; 1st Floor, Jalan Sultan Ismail, WP Kuala Lumpur, Malaysia.<br>
+      Tel: 03-2148 9270.
+    </div>
+
+    <div class="bfooter">
+      Premium Entrepreneur Consultant Sdn. Bhd. &nbsp;201501011794 (1137129-X)<br>
+      Tel: +603-2740 0711 | Email: inquiry@premium.edu.my | Website: www.premium.edu.my<br>
+      Address: Unit 10-1-1 &amp; 10-1-2, Level 10, Fahrenheit 88 Office Tower, No. 179 Jalan Gading Bukit Bintang, 55100 WP Kuala Lumpur, Malaysia.
+    </div>
+  </div>
+</div>
+
+<script>
+const fmt = n => 'RM ' + n.toLocaleString('en-MY', {minimumFractionDigits:0});
+
+/* ---------------- DATA ---------------- */
+const PEP_FEES = {
+  foundation: { f2f: 3600, online: 3200 },
+  mastery:    { f2f: 2800, online: 2300 }
+};
+const PEP_ONE_TIME = { registration: 450, resource: 300, visa6mo: 2550, visaRenewal: 1000 };
+/* Exam Preparation one-time fees for the course itself (registration + resource).
+   Placeholder amounts set to match PEP — adjust these two numbers if exam-prep pricing differs. */
+const EXAM_ONE_TIME = { registration: 450, resource: 300 };
+
+const TRACK_KEYS = ['A','B','C'];
+const TRACK_MONTHS = { A:6, B:8, C:10 };
+const TRACK_RENEWALS = { A:0, B:1, C:1 };
+const ONLINE_MONTHS = 6;
+
+const LEVEL_TIER = { 1:'foundation', 2:'foundation', 3:'mastery', 4:'mastery', 5:'mastery' };
+const LEVEL_DAYS = { 1:30, 2:30, 3:20, 4:20, 5:20 };
+const LEVEL_CEFR = { 1:'A1–A2', 2:'A2–B1', 3:'B1–B2', 4:'B2–B2+', 5:'B2+–C1' };
+
+const EXAM_GROUP_KEYS = ['ielts_toefl','muet_pte','aptis_linguaskill'];
+const EXAM_GROUP_DATA = {
+  ielts_toefl:       { days:16, hours:4, total:64, fee:2800, exams:{IELTS:960, TOEFL:850} },
+  muet_pte:          { days:10, hours:4, total:40, fee:2375, exams:{MUET:550, PTE:750} },
+  aptis_linguaskill: { days:10, hours:3, total:30, fee:2200, exams:{APTIS:null, Linguaskill:null} }
+};
+
+/* ---------------- TRANSLATIONS ---------------- */
+const T = {
+en: {
+  badge:"Premium Language Centre",
+  title:"Build Your Quote",
+  subtitle:"Answer a few questions about your goals and schedule — get a full, itemized price instantly.",
+  step1_heading:"Step 1 — Choose Your Programme",
+  step1_hint:"What are you working toward?",
+  pep_name:"Premium English Programme (PEP)",
+  pep_meta:"5 levels · A1 to C1 · general fluency, academic & real-world English",
+  exam_name:"Exam Preparation",
+  exam_meta:"IELTS, TOEFL, MUET, PTE, APTIS, Linguaskill",
+  step2_pep_heading:"Step 2 — Your Levels",
+  step2_pep_hint:"Levels 1–2 are Foundations · Levels 3–5 are Mastery. Not sure of your start level? Our placement test will confirm it.",
+  label_start_level:"Starting Level",
+  label_target_level:"Target Level",
+  level_word:"Level",
+  step3_heading:"Step 3 — Study Mode",
+  mode_f2f_name:"Face-to-Face",
+  mode_f2f_meta:"In-centre classes, 5 hrs/day",
+  mode_online_name:"Online",
+  mode_online_meta:"Live online classes, 4 hrs/day · 6 months only",
+  step4_heading:"Step 4 — Delivery Track",
+  step4_hint:"Same 120 instruction days — choose the pace that fits your life.",
+  trackA_name:"Track A — Intensive",
+  trackB_name:"Track B — Standard",
+  trackC_name:"Track C — Extended",
+  weekly_5:"5 days / week (Mon–Fri)",
+  weekly_alt:"Alternating fortnightly — Wk1: 4 days, Wk2: 3 days, Wk3: 4 days, Wk4: 3 days",
+  weekly_3:"3 days / week",
+  months_word:"months",
+  days_word:"days",
+  hrs_day_word:"hrs/day",
+  hrs_word:"hrs",
+  examstep2_heading:"Step 2 — Choose Your Exam Track",
+  examIT_name:"IELTS & TOEFL",
+  examMP_name:"MUET & PTE",
+  examAL_name:"APTIS & Linguaskill",
+  on_request:"On request",
+  label_which_exam:"Which exam will you be sitting?",
+  examreg_checkbox_label:"Include exam body registration fee (e.g. IELTS/TOEFL) in this quote",
+  hint_reg_fee:"This registration fee is paid directly to the exam body — it is not collected by us.",
+  edutourism_label:"Add Edutourism Package (1 month, learn + explore Malaysia) — price on request",
+  need_visa_label:"I need a Student Visa (adds visa fees to this quote)",
+  label_student_name:"Student Name",
+  label_passport_no:"Passport No.",
+  label_doc_number:"Document No.",
+  doctype_quote:"Quote",
+  doctype_invoice:"Invoice",
+  doctype_receipt:"Receipt",
+  btn_generate_quote:"Download Quote (PDF)",
+  btn_generate_invoice:"Download Invoice (PDF)",
+  btn_generate_receipt:"Download Receipt (PDF)",
+  logo_tagline:"Your Premium Language Partner",
+  bill_to_label:"Bill To",
+  date_label:"Date",
+  please_pay_label:"Please Pay",
+  amount_paid_label:"Amount Paid",
+  due_date_label:"Due Date",
+  payment_date_label:"Payment Date",
+  col_activity:"Activity",
+  col_description:"Description",
+  col_qty:"Qty",
+  col_rate:"Rate",
+  col_amount:"Amount",
+  total_due_label:"Total Due",
+  payable_to_heading:"This amount is payable to:",
+  paid_to_heading:"Payment received to the following account:",
+  paid_stamp:"PAID",
+  summary_heading:"Your Quote",
+  summary_empty:"Make your selections above to see pricing.",
+  btn_generate:"Download Quote (PDF)",
+  line_foundations:(levels,n,price)=>`Levels ${levels} — Foundations (${n} × ${price})`,
+  line_mastery:(levels,n,price)=>`Levels ${levels} — Mastery (${n} × ${price})`,
+  line_registration:"Registration fee (one-time)",
+  line_resource:"Resource fee (one-time)",
+  line_visa6:"Student visa — first 6 months (one-time)",
+  line_visa_renewal:"Visa renewal (+6 months)",
+  line_total:"Total (payable to Premium Language Centre)",
+  line_exam_fee:(label,days,hours,total)=>`${label} — ${days} days × ${hours} hrs/day (${total} hrs total)`,
+  line_exam_reg:(exam)=>`${exam} exam registration (paid to exam body, not included in total)`,
+  line_edutourism:"Edutourism Package (1 month) — price on request",
+  selection_pep:(start,target,modeLabel,trackLabel)=>`PEP · Levels ${start}–${target} · ${modeLabel}${trackLabel? ' · '+trackLabel : ''}`,
+  selection_exam:(groupLabel,exam)=>`Exam Prep · ${groupLabel} · sitting ${exam}`,
+  print_quote_date:"Quote date:",
+  print_valid:"Valid for 14 days",
+  print_selection_summary:"Selection Summary",
+  print_schedule:"Schedule & Format",
+  print_curriculum:"What You'll Study",
+  print_price_breakdown:"Price Breakdown",
+  print_includes:"What's Included",
+  print_total_payable:"Total Payable",
+  print_footnote:"Programme fees per level; visa, registration & resource fees are one-time on enrolment. Exam registration fees (where applicable) are paid directly to the exam body and are not included in the total above. Prices in Malaysian Ringgit (MYR). This quote is an estimate and subject to confirmation at enrolment.",
+  schedule_format_label:"Format",
+  schedule_f2f_value:"Face-to-Face (in-centre)",
+  schedule_online_value:"Online (live classes)",
+  schedule_duration_label:"Duration",
+  schedule_weekly_label:"Weekly schedule",
+  schedule_daily_hours_label:"Daily hours",
+  schedule_total_days_label:"Total training days",
+  schedule_total_hours_label:"Total instruction hours",
+  schedule_sitting_for_label:"Sitting for",
+  schedule_exam_format_value:"Face-to-Face, intensive",
+  tier_foundations:"Foundations",
+  tier_mastery:"Mastery",
+  curriculum_focus_foundations:"Foundations & Personal Expression — starting with the self",
+  curriculum_focus_mastery:"Academic Mastery & Global Communication — the world around us",
+  curriculum_exam_title:(label)=>`${label} preparation`,
+  curriculum_exam_desc:(exam)=>`Targeted instruction covering the exam format, timing, question types and high-yield strategy for ${exam}, backed by mock tests under real exam conditions.`,
+  pep_includes:[
+    "All-in-one curriculum — Listening, Speaking, Reading & Writing, with essential grammar and vocabulary",
+    "True cultural immersion — films, short stories, poetry and hands-on projects with natural English, slang, idioms and accents",
+    "Powered by OpenLearning — lessons and a full resource library, accessible 24/7 on any device",
+    "Gamified digital learning — interactive apps and tools alongside every lesson",
+    "Lifetime digital portfolio — a personalized record of projects and achievements",
+    "Globally benchmarked — every level maps to the international CEFR scale"
+  ],
+  exam_includes:[
+    "100+ online practice question sets",
+    "Diagnostic pre-tests to set your baseline",
+    "Realistic, timed mock exams",
+    "Comprehensive study materials",
+    "Expert instructors focused on high-yield exam strategy"
+  ]
+},
+ar: {
+  badge:"مركز بريميوم للغات",
+  title:"احصل على عرض سعرك",
+  subtitle:"أجب عن بضعة أسئلة حول أهدافك وجدولك الزمني — واحصل على سعر تفصيلي كامل فورًا.",
+  step1_heading:"الخطوة 1 — اختر برنامجك",
+  step1_hint:"ما هو هدفك؟",
+  pep_name:"برنامج بريميوم للغة الإنجليزية (PEP)",
+  pep_meta:"5 مستويات · من A1 إلى C1 · طلاقة عامة، أكاديمية وواقعية",
+  exam_name:"التحضير للاختبارات",
+  exam_meta:"IELTS، TOEFL، MUET، PTE، APTIS، Linguaskill",
+  step2_pep_heading:"الخطوة 2 — مستوياتك",
+  step2_pep_hint:"المستويان 1–2 هما التأسيس · المستويات 3–5 هي الإتقان. غير متأكد من مستواك؟ اختبار تحديد المستوى لدينا سيؤكد ذلك.",
+  label_start_level:"المستوى المبدئي",
+  label_target_level:"المستوى المستهدف",
+  level_word:"المستوى",
+  step3_heading:"الخطوة 3 — طريقة الدراسة",
+  mode_f2f_name:"حضوري",
+  mode_f2f_meta:"دروس في المركز، 5 ساعات/يوم",
+  mode_online_name:"عبر الإنترنت",
+  mode_online_meta:"دروس مباشرة عبر الإنترنت، 4 ساعات/يوم · 6 أشهر فقط",
+  step4_heading:"الخطوة 4 — مسار الدراسة",
+  step4_hint:"نفس 120 يوم تدريب — اختر الوتيرة التي تناسب حياتك.",
+  trackA_name:"المسار A — مكثف",
+  trackB_name:"المسار B — عادي",
+  trackC_name:"المسار C — ممتد",
+  weekly_5:"5 أيام / أسبوع (الإثنين–الجمعة)",
+  weekly_alt:"بالتناوب كل أسبوعين — الأسبوع 1: 4 أيام، الأسبوع 2: 3 أيام، الأسبوع 3: 4 أيام، الأسبوع 4: 3 أيام",
+  weekly_3:"3 أيام / أسبوع",
+  months_word:"أشهر",
+  days_word:"أيام",
+  hrs_day_word:"ساعات/يوم",
+  hrs_word:"ساعة",
+  examstep2_heading:"الخطوة 2 — اختر مسار الاختبار",
+  examIT_name:"IELTS و TOEFL",
+  examMP_name:"MUET و PTE",
+  examAL_name:"APTIS و Linguaskill",
+  on_request:"عند الطلب",
+  label_which_exam:"ما هو الاختبار الذي ستؤديه؟",
+  examreg_checkbox_label:"تضمين رسوم تسجيل هيئة الاختبار (مثل IELTS/TOEFL) في هذا العرض",
+  hint_reg_fee:"رسوم التسجيل هذه تُدفع مباشرة لهيئة الاختبار — ولا يتم تحصيلها من قِبلنا.",
+  edutourism_label:"إضافة باقة السياحة التعليمية (شهر واحد، تعلّم + استكشف ماليزيا) — السعر عند الطلب",
+  need_visa_label:"أحتاج إلى تأشيرة طالب (تُضاف رسوم التأشيرة إلى هذا العرض)",
+  label_student_name:"اسم الطالب",
+  label_passport_no:"رقم جواز السفر",
+  label_doc_number:"رقم المستند",
+  doctype_quote:"عرض سعر",
+  doctype_invoice:"فاتورة",
+  doctype_receipt:"إيصال",
+  btn_generate_quote:"تحميل عرض السعر (PDF)",
+  btn_generate_invoice:"تحميل الفاتورة (PDF)",
+  btn_generate_receipt:"تحميل الإيصال (PDF)",
+  logo_tagline:"شريكك المتميز في اللغة",
+  bill_to_label:"فاتورة إلى",
+  date_label:"التاريخ",
+  please_pay_label:"المبلغ المستحق",
+  amount_paid_label:"المبلغ المدفوع",
+  due_date_label:"تاريخ الاستحقاق",
+  payment_date_label:"تاريخ الدفع",
+  col_activity:"النشاط",
+  col_description:"الوصف",
+  col_qty:"الكمية",
+  col_rate:"السعر",
+  col_amount:"المبلغ",
+  total_due_label:"إجمالي المستحق",
+  payable_to_heading:"هذا المبلغ مستحق الدفع إلى:",
+  paid_to_heading:"تم استلام الدفعة في الحساب التالي:",
+  paid_stamp:"مدفوع",
+  summary_heading:"عرض سعرك",
+  summary_empty:"قم باختياراتك أعلاه لرؤية السعر.",
+  btn_generate:"تحميل العرض (PDF)",
+  line_foundations:(levels,n,price)=>`المستويات ${levels} — التأسيس (${n} × ${price})`,
+  line_mastery:(levels,n,price)=>`المستويات ${levels} — الإتقان (${n} × ${price})`,
+  line_registration:"رسوم التسجيل (لمرة واحدة)",
+  line_resource:"رسوم المواد (لمرة واحدة)",
+  line_visa6:"تأشيرة الطالب — أول 6 أشهر (لمرة واحدة)",
+  line_visa_renewal:"تجديد التأشيرة (+6 أشهر)",
+  line_total:"الإجمالي (مستحق الدفع لمركز بريميوم للغات)",
+  line_exam_fee:(label,days,hours,total)=>`${label} — ${days} يومًا × ${hours} ساعات/يوم (${total} ساعة إجمالاً)`,
+  line_exam_reg:(exam)=>`رسوم تسجيل اختبار ${exam} (تُدفع لهيئة الاختبار، غير مشمولة في الإجمالي)`,
+  line_edutourism:"باقة السياحة التعليمية (شهر واحد) — السعر عند الطلب",
+  selection_pep:(start,target,modeLabel,trackLabel)=>`PEP · المستويات ${start}–${target} · ${modeLabel}${trackLabel? ' · '+trackLabel : ''}`,
+  selection_exam:(groupLabel,exam)=>`التحضير للاختبار · ${groupLabel} · سيؤدي ${exam}`,
+  print_quote_date:"تاريخ العرض:",
+  print_valid:"العرض صالح لمدة 14 يومًا",
+  print_selection_summary:"ملخص الاختيار",
+  print_schedule:"الجدول والشكل",
+  print_curriculum:"ماذا ستدرس",
+  print_price_breakdown:"تفصيل السعر",
+  print_includes:"ما يشمله البرنامج",
+  print_total_payable:"الإجمالي المستحق",
+  print_footnote:"رسوم البرنامج لكل مستوى؛ رسوم التأشيرة والتسجيل والمواد تُدفع لمرة واحدة عند التسجيل. رسوم تسجيل الاختبار (إن وجدت) تُدفع مباشرة لهيئة الاختبار وغير مشمولة في الإجمالي أعلاه. الأسعار بالرينغيت الماليزي (MYR). هذا العرض تقديري وخاضع للتأكيد عند التسجيل.",
+  schedule_format_label:"الشكل",
+  schedule_f2f_value:"حضوري (في المركز)",
+  schedule_online_value:"عبر الإنترنت (دروس مباشرة)",
+  schedule_duration_label:"المدة",
+  schedule_weekly_label:"الجدول الأسبوعي",
+  schedule_daily_hours_label:"الساعات اليومية",
+  schedule_total_days_label:"إجمالي أيام التدريب",
+  schedule_total_hours_label:"إجمالي ساعات التدريب",
+  schedule_sitting_for_label:"الاختبار المستهدف",
+  schedule_exam_format_value:"حضوري، مكثف",
+  tier_foundations:"التأسيس",
+  tier_mastery:"الإتقان",
+  curriculum_focus_foundations:"التأسيس والتعبير الشخصي — البداية من الذات",
+  curriculum_focus_mastery:"الإتقان الأكاديمي والتواصل العالمي — العالم من حولنا",
+  curriculum_exam_title:(label)=>`التحضير لاختبار ${label}`,
+  curriculum_exam_desc:(exam)=>`تدريب مركّز يغطي صيغة الاختبار والتوقيت وأنواع الأسئلة والاستراتيجيات عالية الفعالية لاختبار ${exam}، مدعوم باختبارات تجريبية في ظروف مشابهة للاختبار الحقيقي.`,
+  pep_includes:[
+    "منهج متكامل — الاستماع والتحدث والقراءة والكتابة، مع القواعد الأساسية والمفردات",
+    "انغماس ثقافي حقيقي — أفلام وقصص قصيرة وشعر ومشاريع عملية بلغة إنجليزية طبيعية، بما في ذلك العامية واللهجات",
+    "مدعوم بمنصة OpenLearning — دروس ومكتبة موارد كاملة، متاحة على مدار الساعة على أي جهاز",
+    "تعلم رقمي تفاعلي — تطبيقات وأدوات تفاعلية مع كل درس",
+    "ملف إنجاز رقمي دائم — سجل شخصي للمشاريع والإنجازات",
+    "معتمد عالميًا — كل مستوى يتوافق مع إطار الـ CEFR الدولي"
+  ],
+  exam_includes:[
+    "أكثر من 100 مجموعة أسئلة تدريبية عبر الإنترنت",
+    "اختبارات تشخيصية أولية لتحديد مستواك",
+    "اختبارات تجريبية واقعية ومحددة بوقت",
+    "مواد دراسية شاملة",
+    "مدربون خبراء يركزون على استراتيجيات عالية الفعالية"
+  ]
+},
+zh: {
+  badge:"卓越语言中心",
+  title:"生成您的报价",
+  subtitle:"回答几个关于您目标和时间安排的问题，即刻获得完整的分项报价。",
+  step1_heading:"第一步 — 选择您的课程",
+  step1_hint:"您的学习目标是什么？",
+  pep_name:"卓越英语课程（PEP）",
+  pep_meta:"5个等级 · A1至C1 · 综合流利度、学术与实用英语",
+  exam_name:"考试备考课程",
+  exam_meta:"雅思、托福、MUET、PTE、APTIS、Linguaskill",
+  step2_pep_heading:"第二步 — 选择您的等级",
+  step2_pep_hint:"1–2级为基础阶段，3–5级为精通阶段。不确定起点？我们的分班测试会为您确认。",
+  label_start_level:"起始等级",
+  label_target_level:"目标等级",
+  level_word:"等级",
+  step3_heading:"第三步 — 学习方式",
+  mode_f2f_name:"面授课程",
+  mode_f2f_meta:"中心内授课，每天5小时",
+  mode_online_name:"在线课程",
+  mode_online_meta:"在线实时授课，每天4小时 · 仅限6个月课程",
+  step4_heading:"第四步 — 授课模式",
+  step4_hint:"同样是120个教学日 — 选择适合您生活节奏的方式。",
+  trackA_name:"A班 — 密集课程",
+  trackB_name:"B班 — 标准课程",
+  trackC_name:"C班 — 延展课程",
+  weekly_5:"每周5天（周一至周五）",
+  weekly_alt:"隔周交替 — 第1周：4天，第2周：3天，第3周：4天，第4周：3天",
+  weekly_3:"每周3天",
+  months_word:"个月",
+  days_word:"天",
+  hrs_day_word:"小时/天",
+  hrs_word:"小时",
+  examstep2_heading:"第二步 — 选择考试课程",
+  examIT_name:"雅思与托福",
+  examMP_name:"MUET与PTE",
+  examAL_name:"APTIS与Linguaskill",
+  on_request:"询价",
+  label_which_exam:"您将参加哪项考试？",
+  examreg_checkbox_label:"在此报价中包含考试机构报名费（如 IELTS/TOEFL）",
+  hint_reg_fee:"该报名费直接支付给考试机构，不由我们收取。",
+  edutourism_label:"添加教育旅游套餐（1个月，学习+探索马来西亚）— 价格详询",
+  need_visa_label:"我需要学生签证（此报价将加入签证费用）",
+  label_student_name:"学生姓名",
+  label_passport_no:"护照号码",
+  label_doc_number:"单据编号",
+  doctype_quote:"报价单",
+  doctype_invoice:"发票",
+  doctype_receipt:"收据",
+  btn_generate_quote:"下载报价单（PDF）",
+  btn_generate_invoice:"下载发票（PDF）",
+  btn_generate_receipt:"下载收据（PDF）",
+  logo_tagline:"您的优质语言伙伴",
+  bill_to_label:"客户资料",
+  date_label:"日期",
+  please_pay_label:"应付金额",
+  amount_paid_label:"已付金额",
+  due_date_label:"到期日",
+  payment_date_label:"付款日期",
+  col_activity:"项目",
+  col_description:"说明",
+  col_qty:"数量",
+  col_rate:"单价",
+  col_amount:"金额",
+  total_due_label:"总计应付",
+  payable_to_heading:"此款项应支付给：",
+  paid_to_heading:"款项已收至以下账户：",
+  paid_stamp:"已付款",
+  summary_heading:"您的报价",
+  summary_empty:"请在上方完成选择以查看价格。",
+  btn_generate:"下载报价单（PDF）",
+  line_foundations:(levels,n,price)=>`第${levels}级 — 基础阶段（${n} × ${price}）`,
+  line_mastery:(levels,n,price)=>`第${levels}级 — 精通阶段（${n} × ${price}）`,
+  line_registration:"注册费（一次性）",
+  line_resource:"资料费（一次性）",
+  line_visa6:"学生签证 — 前6个月（一次性）",
+  line_visa_renewal:"签证续签（+6个月）",
+  line_total:"总计（应付卓越语言中心）",
+  line_exam_fee:(label,days,hours,total)=>`${label} — ${days}天 × 每天${hours}小时（共${total}小时）`,
+  line_exam_reg:(exam)=>`${exam}考试报名费（支付给考试机构，不含在总价内）`,
+  line_edutourism:"教育旅游套餐（1个月）— 价格详询",
+  selection_pep:(start,target,modeLabel,trackLabel)=>`PEP · 第${start}–${target}级 · ${modeLabel}${trackLabel? ' · '+trackLabel : ''}`,
+  selection_exam:(groupLabel,exam)=>`考试备考 · ${groupLabel} · 应考 ${exam}`,
+  print_quote_date:"报价日期：",
+  print_valid:"有效期14天",
+  print_selection_summary:"选择摘要",
+  print_schedule:"课程安排",
+  print_curriculum:"学习内容",
+  print_price_breakdown:"价格明细",
+  print_includes:"课程包含",
+  print_total_payable:"应付总额",
+  print_footnote:"课程费用按等级计算；签证费、注册费与资料费为一次性入学费用。考试报名费（如适用）直接支付给考试机构，不包含在上述总额中。价格以马来西亚令吉（MYR）计算。此报价为估算，最终以入学时确认为准。",
+  schedule_format_label:"授课形式",
+  schedule_f2f_value:"面授（中心内）",
+  schedule_online_value:"在线（实时授课）",
+  schedule_duration_label:"时长",
+  schedule_weekly_label:"每周安排",
+  schedule_daily_hours_label:"每日课时",
+  schedule_total_days_label:"总培训天数",
+  schedule_total_hours_label:"总教学时数",
+  schedule_sitting_for_label:"报考科目",
+  schedule_exam_format_value:"面授，密集课程",
+  tier_foundations:"基础阶段",
+  tier_mastery:"精通阶段",
+  curriculum_focus_foundations:"基础与自我表达 — 从自身出发",
+  curriculum_focus_mastery:"学术精通与全球沟通 — 放眼世界",
+  curriculum_exam_title:(label)=>`${label}备考课程`,
+  curriculum_exam_desc:(exam)=>`针对${exam}考试形式、时间安排、题型及高效策略进行专项训练，并配合模拟真实考试环境的模考。`,
+  pep_includes:[
+    "一体化课程 — 听、说、读、写全面提升，涵盖核心语法与词汇",
+    "真实文化沉浸 — 电影、短篇故事、诗歌与实践项目，接触地道英语、俚语和口音",
+    "由OpenLearning提供支持 — 课程与完整资源库，全天候随时随地访问",
+    "游戏化数字学习 — 每节课配套互动应用与工具",
+    "终身数字作品集 — 记录个人项目与成就",
+    "全球认证标准 — 每个等级均对应国际CEFR标准"
+  ],
+  exam_includes:[
+    "100+套在线练习题",
+    "诊断性预测试，确定您的基础水平",
+    "真实计时模拟考试",
+    "全面的备考资料",
+    "专注高效策略的专业讲师"
+  ]
+},
+fr: {
+  badge:"Premium Language Centre",
+  title:"Construisez votre devis",
+  subtitle:"Répondez à quelques questions sur vos objectifs et votre emploi du temps — obtenez un prix détaillé instantanément.",
+  step1_heading:"Étape 1 — Choisissez votre programme",
+  step1_hint:"Quel est votre objectif ?",
+  pep_name:"Programme d'Anglais Premium (PEP)",
+  pep_meta:"5 niveaux · A1 à C1 · fluidité générale, anglais académique et réel",
+  exam_name:"Préparation aux examens",
+  exam_meta:"IELTS, TOEFL, MUET, PTE, APTIS, Linguaskill",
+  step2_pep_heading:"Étape 2 — Vos niveaux",
+  step2_pep_hint:"Les niveaux 1–2 sont les Fondations · Les niveaux 3–5 sont la Maîtrise. Vous n'êtes pas sûr de votre niveau de départ ? Notre test de positionnement le confirmera.",
+  label_start_level:"Niveau de départ",
+  label_target_level:"Niveau visé",
+  level_word:"Niveau",
+  step3_heading:"Étape 3 — Mode d'étude",
+  mode_f2f_name:"En présentiel",
+  mode_f2f_meta:"Cours au centre, 5 h/jour",
+  mode_online_name:"En ligne",
+  mode_online_meta:"Cours en ligne en direct, 4 h/jour · 6 mois uniquement",
+  step4_heading:"Étape 4 — Formule de cours",
+  step4_hint:"Les mêmes 120 jours d'instruction — choisissez le rythme adapté à votre vie.",
+  trackA_name:"Formule A — Intensive",
+  trackB_name:"Formule B — Standard",
+  trackC_name:"Formule C — Étendue",
+  weekly_5:"5 jours / semaine (lun.–ven.)",
+  weekly_alt:"Alternance toutes les deux semaines — Sem.1 : 4 jours, Sem.2 : 3 jours, Sem.3 : 4 jours, Sem.4 : 3 jours",
+  weekly_3:"3 jours / semaine",
+  months_word:"mois",
+  days_word:"jours",
+  hrs_day_word:"h/jour",
+  hrs_word:"h",
+  examstep2_heading:"Étape 2 — Choisissez votre parcours d'examen",
+  examIT_name:"IELTS et TOEFL",
+  examMP_name:"MUET et PTE",
+  examAL_name:"APTIS et Linguaskill",
+  on_request:"Sur demande",
+  label_which_exam:"Quel examen allez-vous passer ?",
+  examreg_checkbox_label:"Inclure les frais d'inscription de l'organisme de l'examen (ex. IELTS/TOEFL) dans ce devis",
+  hint_reg_fee:"Ces frais d'inscription sont payés directement à l'organisme de l'examen — ils ne sont pas collectés par nous.",
+  edutourism_label:"Ajouter le Forfait Edutourisme (1 mois, apprendre + explorer la Malaisie) — prix sur demande",
+  need_visa_label:"J'ai besoin d'un visa étudiant (ajoute les frais de visa à ce devis)",
+  label_student_name:"Nom de l'étudiant",
+  label_passport_no:"N° de passeport",
+  label_doc_number:"N° de document",
+  doctype_quote:"Devis",
+  doctype_invoice:"Facture",
+  doctype_receipt:"Reçu",
+  btn_generate_quote:"Télécharger le devis (PDF)",
+  btn_generate_invoice:"Télécharger la facture (PDF)",
+  btn_generate_receipt:"Télécharger le reçu (PDF)",
+  logo_tagline:"Votre partenaire de langue premium",
+  bill_to_label:"Facturé à",
+  date_label:"Date",
+  please_pay_label:"Montant à payer",
+  amount_paid_label:"Montant payé",
+  due_date_label:"Date d'échéance",
+  payment_date_label:"Date de paiement",
+  col_activity:"Activité",
+  col_description:"Description",
+  col_qty:"Qté",
+  col_rate:"Tarif",
+  col_amount:"Montant",
+  total_due_label:"Total dû",
+  payable_to_heading:"Ce montant est payable à :",
+  paid_to_heading:"Paiement reçu sur le compte suivant :",
+  paid_stamp:"PAYÉ",
+  summary_heading:"Votre devis",
+  summary_empty:"Faites vos choix ci-dessus pour voir le prix.",
+  btn_generate:"Télécharger le devis (PDF)",
+  line_foundations:(levels,n,price)=>`Niveaux ${levels} — Fondations (${n} × ${price})`,
+  line_mastery:(levels,n,price)=>`Niveaux ${levels} — Maîtrise (${n} × ${price})`,
+  line_registration:"Frais d'inscription (unique)",
+  line_resource:"Frais de ressources (unique)",
+  line_visa6:"Visa étudiant — 6 premiers mois (unique)",
+  line_visa_renewal:"Renouvellement de visa (+6 mois)",
+  line_total:"Total (payable à Premium Language Centre)",
+  line_exam_fee:(label,days,hours,total)=>`${label} — ${days} jours × ${hours} h/jour (${total} h au total)`,
+  line_exam_reg:(exam)=>`Inscription à l'examen ${exam} (payée à l'organisme, non incluse dans le total)`,
+  line_edutourism:"Forfait Edutourisme (1 mois) — prix sur demande",
+  selection_pep:(start,target,modeLabel,trackLabel)=>`PEP · Niveaux ${start}–${target} · ${modeLabel}${trackLabel? ' · '+trackLabel : ''}`,
+  selection_exam:(groupLabel,exam)=>`Préparation examen · ${groupLabel} · passera ${exam}`,
+  print_quote_date:"Date du devis :",
+  print_valid:"Valable 14 jours",
+  print_selection_summary:"Résumé de la sélection",
+  print_schedule:"Horaires et format",
+  print_curriculum:"Ce que vous allez étudier",
+  print_price_breakdown:"Détail des prix",
+  print_includes:"Ce qui est inclus",
+  print_total_payable:"Total à payer",
+  print_footnote:"Frais de programme par niveau ; les frais de visa, d'inscription et de ressources sont uniques, payables à l'inscription. Les frais d'inscription à l'examen (le cas échéant) sont payés directement à l'organisme et ne sont pas inclus dans le total ci-dessus. Prix en Ringgit malaisien (MYR). Ce devis est une estimation soumise à confirmation lors de l'inscription.",
+  schedule_format_label:"Format",
+  schedule_f2f_value:"En présentiel (au centre)",
+  schedule_online_value:"En ligne (cours en direct)",
+  schedule_duration_label:"Durée",
+  schedule_weekly_label:"Horaire hebdomadaire",
+  schedule_daily_hours_label:"Heures par jour",
+  schedule_total_days_label:"Total des jours de formation",
+  schedule_total_hours_label:"Total des heures d'instruction",
+  schedule_sitting_for_label:"Examen visé",
+  schedule_exam_format_value:"En présentiel, intensif",
+  tier_foundations:"Fondations",
+  tier_mastery:"Maîtrise",
+  curriculum_focus_foundations:"Fondations et expression personnelle — en partant de soi",
+  curriculum_focus_mastery:"Maîtrise académique et communication mondiale — le monde qui nous entoure",
+  curriculum_exam_title:(label)=>`Préparation ${label}`,
+  curriculum_exam_desc:(exam)=>`Formation ciblée couvrant le format, le minutage, les types de questions et les stratégies à fort impact pour ${exam}, appuyée par des examens blancs en conditions réelles.`,
+  pep_includes:[
+    "Programme tout-en-un — écoute, expression orale, lecture et écriture, avec grammaire et vocabulaire essentiels",
+    "Immersion culturelle authentique — films, nouvelles, poésie et projets pratiques avec un anglais naturel : argot, expressions idiomatiques et accents inclus",
+    "Propulsé par OpenLearning — cours et bibliothèque de ressources complète, accessibles 24h/24 sur tout appareil",
+    "Apprentissage numérique ludique — applications et outils interactifs à chaque leçon",
+    "Portfolio numérique à vie — un dossier personnalisé de projets et de réussites",
+    "Reconnu mondialement — chaque niveau correspond à l'échelle internationale CEFR"
+  ],
+  exam_includes:[
+    "Plus de 100 séries de questions d'entraînement en ligne",
+    "Tests de diagnostic pour établir votre niveau de départ",
+    "Examens blancs réalistes et chronométrés",
+    "Matériel d'étude complet",
+    "Instructeurs experts axés sur les stratégies à fort impact"
+  ]
+}
+};
+
+let state = { lang:'en', programme:null, startLevel:1, targetLevel:5, mode:null, track:null, examGroup:null, examSpecific:null, examRegOption:false, edutourism:false, docType:'quote', needVisa:true };
+const tr = key => T[state.lang][key] !== undefined ? T[state.lang][key] : T.en[key];
+
+/* ---------------- RENDER STATIC TEXT ---------------- */
+function applyStaticText(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    const val = tr(key);
+    if(typeof val === 'string') el.textContent = val;
+  });
+  document.documentElement.lang = state.lang;
+  document.documentElement.dir = state.lang==='ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('#langSwitch button').forEach(b=>b.classList.toggle('active', b.dataset.lang===state.lang));
+}
+
+/* ---------------- CARD BUILDERS ---------------- */
+function makeCard(name, meta, price){
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.innerHTML = `<div class="name">${name}</div><div class="meta">${meta}</div>` + (price ? `<div class="price">${price}</div>` : '');
+  return div;
+}
+
+function renderProgrammeCards(){
+  const c = document.getElementById('programmeCards');
+  c.innerHTML='';
+  const pep = makeCard(tr('pep_name'), tr('pep_meta'));
+  pep.dataset.programme='pep';
+  const exam = makeCard(tr('exam_name'), tr('exam_meta'));
+  exam.dataset.programme='exam';
+  [pep,exam].forEach(card=>{
+    if(state.programme===card.dataset.programme) card.classList.add('selected');
+    card.addEventListener('click', ()=>{
+      state.programme = card.dataset.programme;
+      document.getElementById('pepSection').classList.toggle('hidden', state.programme!=='pep');
+      document.getElementById('examSection').classList.toggle('hidden', state.programme!=='exam');
+      renderProgrammeCards();
+      updateSummary();
+    });
+    c.appendChild(card);
+  });
+}
+
+function renderLevelSelects(){
+  ['startLevel','targetLevel'].forEach(id=>{
+    const sel = document.getElementById(id);
+    const current = id==='startLevel' ? state.startLevel : state.targetLevel;
+    sel.innerHTML='';
+    for(let i=1;i<=5;i++){
+      const opt = document.createElement('option');
+      opt.value=i; opt.textContent = `${tr('level_word')} ${i}`;
+      if(i===current) opt.selected=true;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function renderModeCards(){
+  const c = document.getElementById('modeCards');
+  c.innerHTML='';
+  const f2f = makeCard(tr('mode_f2f_name'), tr('mode_f2f_meta'));
+  f2f.dataset.mode='f2f';
+  const online = makeCard(tr('mode_online_name'), tr('mode_online_meta'));
+  online.dataset.mode='online';
+  [f2f,online].forEach(card=>{
+    if(state.mode===card.dataset.mode) card.classList.add('selected');
+    card.addEventListener('click', ()=>{
+      state.mode = card.dataset.mode;
+      const showTrack = state.mode==='f2f';
+      document.getElementById('trackWrap').classList.toggle('hidden', !showTrack);
+      if(!showTrack) state.track=null;
+      renderModeCards();
+      updateSummary();
+    });
+    c.appendChild(card);
+  });
+}
+
+function trackWeeklyText(key){
+  if(key==='A') return tr('weekly_5');
+  if(key==='B') return tr('weekly_alt');
+  if(key==='C') return tr('weekly_3');
+  return tr('weekly_5'); // online
+}
+function trackNameText(key){
+  if(key==='A') return tr('trackA_name');
+  if(key==='B') return tr('trackB_name');
+  if(key==='C') return tr('trackC_name');
+}
+
+function renderTrackCards(){
+  const c = document.getElementById('trackCards');
+  c.innerHTML='';
+  TRACK_KEYS.forEach(k=>{
+    const meta = `${TRACK_MONTHS[k]} ${tr('months_word')} · ${trackWeeklyText(k)}`;
+    const card = makeCard(trackNameText(k), meta);
+    card.dataset.track=k;
+    if(state.track===k) card.classList.add('selected');
+    card.addEventListener('click', ()=>{
+      state.track = k;
+      renderTrackCards();
+      updateSummary();
+    });
+    c.appendChild(card);
+  });
+}
+
+function examGroupName(key){
+  if(key==='ielts_toefl') return tr('examIT_name');
+  if(key==='muet_pte') return tr('examMP_name');
+  if(key==='aptis_linguaskill') return tr('examAL_name');
+}
+
+function renderExamCards(){
+  const c = document.getElementById('examCards');
+  c.innerHTML='';
+  EXAM_GROUP_KEYS.forEach(k=>{
+    const g = EXAM_GROUP_DATA[k];
+    const meta = `${g.days} ${tr('days_word')} · ${g.hours} ${tr('hrs_day_word')} · ${g.total} ${tr('hrs_word')}`;
+    const card = makeCard(examGroupName(k), meta, fmt(g.fee));
+    card.dataset.exam=k;
+    if(state.examGroup===k) card.classList.add('selected');
+    card.addEventListener('click', ()=>{
+      state.examGroup = k;
+      state.examSpecific = Object.keys(EXAM_GROUP_DATA[k].exams)[0];
+      renderExamCards();
+      renderExamSpecificSelect();
+      document.getElementById('examSpecificWrap').classList.remove('hidden');
+      updateSummary();
+    });
+    c.appendChild(card);
+  });
+}
+
+function renderExamSpecificSelect(){
+  if(!state.examGroup) return;
+  const sel = document.getElementById('examSpecific');
+  const group = EXAM_GROUP_DATA[state.examGroup];
+  sel.innerHTML='';
+  Object.keys(group.exams).forEach(name=>{
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    if(name===state.examSpecific) opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById('startLevel')?.addEventListener('change', ()=>{});
+document.getElementById('edutourism').addEventListener('change', e=>{ state.edutourism = e.target.checked; updateSummary(); });
+document.getElementById('needVisa').addEventListener('change', e=>{ state.needVisa = e.target.checked; updateSummary(); });
+document.getElementById('examSpecific').addEventListener('change', e=>{ state.examSpecific = e.target.value; updateSummary(); });
+document.getElementById('examRegOption').addEventListener('change', e=>{ state.examRegOption = e.target.checked; updateSummary(); });
+
+function bindLevelSelects(){
+  document.getElementById('startLevel').addEventListener('change', e=>{ state.startLevel=+e.target.value; updateSummary(); });
+  document.getElementById('targetLevel').addEventListener('change', e=>{ state.targetLevel=+e.target.value; updateSummary(); });
+}
+
+/* ---------------- PRICING ---------------- */
+function pepLevelBreakdown(){
+  const lines = [];
+  let total = 0;
+  const start = Math.min(state.startLevel, state.targetLevel);
+  const end = Math.max(state.startLevel, state.targetLevel);
+  const foundationLevels = [], masteryLevels = [];
+  for(let lvl=start; lvl<=end; lvl++){
+    (LEVEL_TIER[lvl]==='foundation' ? foundationLevels : masteryLevels).push(lvl);
+  }
+  if(foundationLevels.length && state.mode){
+    const price = PEP_FEES.foundation[state.mode];
+    const sub = price*foundationLevels.length;
+    lines.push({label:tr('line_foundations')(foundationLevels.join(', '), foundationLevels.length, fmt(price)), amt:sub});
+    total += sub;
+  }
+  if(masteryLevels.length && state.mode){
+    const price = PEP_FEES.mastery[state.mode];
+    const sub = price*masteryLevels.length;
+    lines.push({label:tr('line_mastery')(masteryLevels.join(', '), masteryLevels.length, fmt(price)), amt:sub});
+    total += sub;
+  }
+  return {lines, total};
+}
+
+function updateSummary(){
+  const box = document.getElementById('summaryLines');
+  const btn = document.getElementById('generateBtn');
+  let lines = [], total = 0, ready = false, selectionText = '';
+
+  if(state.programme==='pep' && state.mode){
+    const {lines: pepLines, total: pepTotal} = pepLevelBreakdown();
+    lines = lines.concat(pepLines);
+    total += pepTotal;
+
+    lines.push({label:tr('line_registration'), amt:PEP_ONE_TIME.registration});
+    lines.push({label:tr('line_resource'), amt:PEP_ONE_TIME.resource});
+    total += PEP_ONE_TIME.registration + PEP_ONE_TIME.resource;
+
+    if(state.mode==='f2f'){
+      if(!state.track){ ready=false; }
+      else{
+        if(state.needVisa){
+          lines.push({label:tr('line_visa6'), amt:PEP_ONE_TIME.visa6mo});
+          total += PEP_ONE_TIME.visa6mo;
+          const renewals = TRACK_RENEWALS[state.track];
+          for(let i=0;i<renewals;i++){
+            lines.push({label:tr('line_visa_renewal'), amt:PEP_ONE_TIME.visaRenewal});
+            total += PEP_ONE_TIME.visaRenewal;
+          }
+        }
+        ready = true;
+        selectionText = tr('selection_pep')(state.startLevel, state.targetLevel, tr('mode_f2f_name'), trackNameText(state.track));
+      }
+    } else if(state.mode==='online'){
+      ready = true;
+      selectionText = tr('selection_pep')(state.startLevel, state.targetLevel, tr('mode_online_name'), '');
+    }
+  }
+
+  if(state.programme==='exam' && state.examGroup){
+    const g = EXAM_GROUP_DATA[state.examGroup];
+    lines.push({label:tr('line_exam_fee')(examGroupName(state.examGroup), g.days, g.hours, g.total), amt:g.fee});
+    total += g.fee;
+
+    lines.push({label:tr('line_registration'), amt:EXAM_ONE_TIME.registration});
+    lines.push({label:tr('line_resource'), amt:EXAM_ONE_TIME.resource});
+    total += EXAM_ONE_TIME.registration + EXAM_ONE_TIME.resource;
+
+    ready = !!state.examSpecific;
+    if(state.examSpecific){
+      selectionText = tr('selection_exam')(examGroupName(state.examGroup), state.examSpecific);
+      if(state.examRegOption){
+        const regFee = g.exams[state.examSpecific];
+        const regDisplay = typeof regFee==='number' ? fmt(regFee) : tr('on_request');
+        lines.push({label:tr('line_exam_reg')(state.examSpecific), amt:null, display:regDisplay});
+      }
+    }
+    if(state.edutourism){
+      lines.push({label:tr('line_edutourism'), amt:null, display:'—'});
+    }
+  }
+
+  if(!lines.length){
+    box.innerHTML = `<div class="empty-note">${tr('summary_empty')}</div>`;
+    btn.disabled = true;
+    window._quoteData = null;
+    return;
+  }
+
+  box.innerHTML = lines.map(l=>{
+    const val = l.display!==undefined ? l.display : fmt(l.amt);
+    return `<div class="line"><span class="l">${l.label}</span><span class="r">${val}</span></div>`;
+  }).join('') + `<div class="line total"><span class="l">${tr('line_total')}</span><span class="r">${fmt(total)}</span></div>`;
+
+  btn.disabled = !ready;
+
+  let levelsList = [];
+  if(state.programme==='pep'){
+    const start = Math.min(state.startLevel, state.targetLevel);
+    const end = Math.max(state.startLevel, state.targetLevel);
+    for(let lvl=start; lvl<=end; lvl++) levelsList.push(lvl);
+  }
+  window._quoteData = {
+    lines, total, selectionText, ready,
+    programme: state.programme, levels: levelsList,
+    mode: state.mode, track: state.track,
+    examGroup: state.examGroup, examSpecific: state.examSpecific
+  };
+}
+
+/* ---------------- PRINT ---------------- */
+function buildScheduleRows(data){
+  const rows = [];
+  if(data.programme==='pep'){
+    const dailyHours = data.mode==='f2f' ? 5 : 4;
+    const totalDays = data.levels.reduce((sum,lvl)=>sum+LEVEL_DAYS[lvl],0);
+    const totalHours = totalDays*dailyHours;
+    const months = data.mode==='f2f' ? TRACK_MONTHS[data.track] : ONLINE_MONTHS;
+    const weekly = data.mode==='f2f' ? trackWeeklyText(data.track) : tr('weekly_5');
+    rows.push([tr('schedule_format_label'), data.mode==='f2f' ? tr('schedule_f2f_value') : tr('schedule_online_value')]);
+    rows.push([tr('schedule_duration_label'), `${months} ${tr('months_word')}`]);
+    rows.push([tr('schedule_weekly_label'), weekly]);
+    rows.push([tr('schedule_daily_hours_label'), `${dailyHours} ${tr('hrs_day_word')}`]);
+    rows.push([tr('schedule_total_days_label'), `${totalDays} ${tr('days_word')}`]);
+    rows.push([tr('schedule_total_hours_label'), `${totalHours} ${tr('hrs_word')}`]);
+  } else if(data.programme==='exam'){
+    const g = EXAM_GROUP_DATA[data.examGroup];
+    rows.push([tr('schedule_format_label'), tr('schedule_exam_format_value')]);
+    rows.push([tr('schedule_duration_label'), `${g.days} ${tr('days_word')}`]);
+    rows.push([tr('schedule_daily_hours_label'), `${g.hours} ${tr('hrs_day_word')}`]);
+    rows.push([tr('schedule_total_hours_label'), `${g.total} ${tr('hrs_word')}`]);
+    rows.push([tr('schedule_sitting_for_label'), data.examSpecific]);
+  }
+  return rows.map(r=>`<tr><td>${r[0]}</td><td class="amt">${r[1]}</td></tr>`).join('');
+}
+
+function buildCurriculum(data){
+  if(data.programme==='pep'){
+    const tiers = {};
+    data.levels.forEach(lvl=>{
+      const tierKey = LEVEL_TIER[lvl];
+      if(!tiers[tierKey]) tiers[tierKey] = { levels:[], cefr:[] };
+      tiers[tierKey].levels.push(lvl);
+      tiers[tierKey].cefr.push(LEVEL_CEFR[lvl]);
+    });
+    return Object.entries(tiers).map(([tierKey,t])=>{
+      const tierName = tierKey==='foundation' ? tr('tier_foundations') : tr('tier_mastery');
+      const focus = tierKey==='foundation' ? tr('curriculum_focus_foundations') : tr('curriculum_focus_mastery');
+      const cefrRange = t.cefr.length>1 ? `${t.cefr[0]} → ${t.cefr[t.cefr.length-1]}` : t.cefr[0];
+      return `<div style="margin-bottom:8px;"><b>${tr('level_word')} ${t.levels.join(', ')} — ${tierName}</b> (CEFR ${cefrRange})<br>${focus}</div>`;
+    }).join('');
+  } else if(data.programme==='exam'){
+    const label = examGroupName(data.examGroup);
+    return `<div><b>${tr('curriculum_exam_title')(label)}</b><br>${tr('curriculum_exam_desc')(data.examSpecific)}</div>`;
+  }
+  return '';
+}
+
+function localeDateStr(){
+  const locale = {en:'en-MY', ar:'ar-MY', zh:'zh-CN', fr:'fr-FR'}[state.lang] || 'en-MY';
+  return new Date().toLocaleDateString(locale, {year:'numeric', month:'long', day:'numeric'});
+}
+
+function renderQuoteDoc(data){
+  document.getElementById('pQuoteDate').textContent = localeDateStr();
+  document.getElementById('pSelectionSummary').textContent = data.selectionText;
+  document.getElementById('pSchedule').innerHTML = buildScheduleRows(data);
+  document.getElementById('pCurriculum').innerHTML = buildCurriculum(data);
+  document.getElementById('pTable').innerHTML = data.lines.map(l=>{
+    const val = l.display!==undefined ? l.display : fmt(l.amt);
+    return `<tr><td>${l.label}</td><td class="amt">${val}</td></tr>`;
+  }).join('') + `<tr><td class="grand">${tr('print_total_payable')}</td><td class="amt grand">${fmt(data.total)}</td></tr>`;
+  const includes = data.programme==='pep' ? tr('pep_includes') : tr('exam_includes');
+  document.getElementById('pIncludes').innerHTML = includes.map(i=>`<li>${i}</li>`).join('');
+  document.getElementById('pFootnote').textContent = tr('print_footnote');
+}
+
+/* ---------------- INVOICE / RECEIPT ---------------- */
+function shortActivity(label){
+  const cut = label.split(/ — | \(/)[0];
+  return cut.length>34 ? cut.slice(0,34)+'…' : cut;
+}
+
+function buildBizRows(data){
+  return data.lines.map(l=>{
+    const val = l.display!==undefined ? l.display : fmt(l.amt);
+    return `<tr><td class="act">${shortActivity(l.label)}</td><td class="desc">${l.label}</td><td class="num">1</td><td class="num">${val}</td><td class="num">${val}</td></tr>`;
+  }).join('');
+}
+
+function renderBizDoc(type, data){
+  const name = document.getElementById('studentName').value.trim();
+  const passport = document.getElementById('passportNo').value.trim();
+  const docNo = document.getElementById('docNumber').value.trim();
+  const dateStr = localeDateStr();
+  const titleWord = type==='invoice' ? tr('doctype_invoice') : tr('doctype_receipt');
+
+  document.getElementById('bizDocTitle').textContent = docNo ? `${titleWord} ${docNo}` : titleWord;
+  document.getElementById('bizBillName').textContent = name || '—';
+  document.getElementById('bizBillPassport').textContent = passport ? `${tr('label_passport_no')}: ${passport}` : '';
+  document.getElementById('bizDate').textContent = dateStr;
+  document.getElementById('bizMidLabel').textContent = type==='invoice' ? tr('please_pay_label') : tr('amount_paid_label');
+  document.getElementById('bizMidValue').textContent = fmt(data.total);
+  document.getElementById('bizRightLabel').textContent = type==='invoice' ? tr('due_date_label') : tr('payment_date_label');
+  document.getElementById('bizRightValue').textContent = dateStr;
+  document.getElementById('bizTableBody').innerHTML = buildBizRows(data);
+  document.getElementById('bizTotalLabel').textContent = tr('total_due_label');
+  document.getElementById('bizTotalValue').textContent = fmt(data.total);
+  document.getElementById('bizPaymentHeading').textContent = type==='invoice' ? tr('payable_to_heading') : tr('paid_to_heading');
+  document.getElementById('bizPaidStamp').classList.toggle('hidden', type!=='receipt');
+  document.getElementById('bizPaidStamp').textContent = tr('paid_stamp');
+}
+
+document.getElementById('generateBtn').addEventListener('click', ()=>{
+  const data = window._quoteData;
+  if(!data || !data.ready) return;
+
+  const quoteArea = document.getElementById('printArea');
+  const bizArea = document.getElementById('printAreaBiz');
+  quoteArea.classList.remove('show');
+  bizArea.classList.remove('show');
+
+  if(state.docType==='quote'){
+    renderQuoteDoc(data);
+    quoteArea.classList.add('show');
+  } else {
+    renderBizDoc(state.docType, data);
+    bizArea.classList.add('show');
+  }
+  window.print();
+});
+
+window.addEventListener('afterprint', ()=>{
+  document.getElementById('printArea').classList.remove('show');
+  document.getElementById('printAreaBiz').classList.remove('show');
+});
+
+/* ---------------- DOCUMENT TYPE SWITCH ---------------- */
+function updateDocTypeUI(){
+  document.querySelectorAll('#docTypeSwitch button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.doctype===state.docType);
+  });
+  const btn = document.getElementById('generateBtn');
+  const key = state.docType==='invoice' ? 'btn_generate_invoice' : state.docType==='receipt' ? 'btn_generate_receipt' : 'btn_generate_quote';
+  btn.textContent = tr(key);
+  document.getElementById('docNumberWrap').classList.toggle('hidden', state.docType==='quote');
+}
+
+document.getElementById('docTypeSwitch').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-doctype]');
+  if(!btn) return;
+  state.docType = btn.dataset.doctype;
+  updateDocTypeUI();
+});
+
+/* ---------------- LANGUAGE SWITCH ---------------- */
+document.getElementById('langSwitch').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-lang]');
+  if(!btn) return;
+  state.lang = btn.dataset.lang;
+  renderAll();
+});
+
+function renderAll(){
+  applyStaticText();
+  renderProgrammeCards();
+  renderLevelSelects();
+  renderModeCards();
+  renderTrackCards();
+  renderExamCards();
+  if(state.examGroup) renderExamSpecificSelect();
+  updateSummary();
+  updateDocTypeUI();
+}
+
+bindLevelSelects();
+renderAll();
+</script>
+</body>
+</html>
