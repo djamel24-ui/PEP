@@ -209,6 +209,23 @@ select,input[type=text],input[type=number]{background:#fbf7ee;border-radius:8px}
 .quote-doc .grand,.biz-doc .btotal-row .tvalue{font-family:Charter,Georgia,serif}
 .biz-doc .bhead .doctitle{font-family:Charter,'Bitstream Charter',Georgia,serif}
 .biz-doc .paybox:not(.mid){background:var(--cream)}
+
+/* ---- Quick Replies panel (screen only) ---- */
+#qrToggle{position:fixed;top:14px;right:14px;z-index:50;background:var(--navy);color:var(--gold);border:0;border-radius:24px;padding:10px 18px;font:700 12.5px Arial,sans-serif;letter-spacing:.06em;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+#qrPanel{position:fixed;top:0;bottom:0;right:0;left:auto;width:min(480px,100vw);background:var(--cream);border-left:1.5px solid var(--border);z-index:60;display:flex;flex-direction:column;direction:ltr;text-align:left;transform:translateX(105%);transition:transform .2s;box-shadow:-6px 0 24px rgba(0,0,0,.25);font-family:Arial,'Segoe UI',sans-serif}
+#qrPanel.open{transform:none}
+#qrPanel .qr-head{display:flex;justify-content:space-between;align-items:center;background:var(--red);color:#fff;padding:14px 16px}
+#qrPanel .qr-head button{background:transparent;border:0;color:#fff;font-size:24px;line-height:1;cursor:pointer}
+#qrPanel .qr-tools{padding:12px 14px;border-bottom:1px solid var(--border)}
+#qrPanel textarea,#qrPanel input[type=text]{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font:13px Arial,sans-serif;background:#fbf7ee;margin-bottom:8px;resize:vertical}
+#qrPanel button.qr-btn{border:1.5px solid var(--navy);background:#fff;color:var(--navy);border-radius:16px;padding:6px 12px;font:700 12px Arial,sans-serif;cursor:pointer;margin-inline-end:6px}
+#qrPanel button.qr-btn.pri{background:var(--red);border-color:var(--red);color:#fff}
+#qrList{flex:1;overflow:auto;padding:12px 14px 40px}
+.qr-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.qr-card .qr-title{font-weight:700;color:var(--navy);font-size:14px;margin-bottom:6px}
+.qr-card .qr-title em{color:var(--red);font-size:11px;font-style:normal;margin-left:6px}
+.qr-card .qr-text{white-space:pre-wrap;font-size:13px;line-height:1.55;color:var(--text);margin-bottom:10px}
+@media print{#qrToggle,#qrPanel{display:none !important}}
 </style>
 </head>
 <body id="bodyRoot">
@@ -286,6 +303,25 @@ select,input[type=text],input[type=number]{background:#fbf7ee;border-radius:8px}
     </div>
   </div>
 
+  <div class="step hidden" id="agSection">
+    <h2 data-i18n="ag_step2_heading"></h2>
+    <div class="cards" id="agCards"></div>
+    <div class="row" style="margin-top:16px;">
+      <div class="field">
+        <label data-i18n="label_start_level"></label>
+        <select id="agStart"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="label_target_level"></label>
+        <select id="agEnd"></select>
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="agVisa" checked>
+      <label for="agVisa" data-i18n="ag_visa_label"></label>
+    </div>
+  </div>
+
   <div class="step hidden" id="classSection">
     <h2 data-i18n="cls_step2_heading"></h2>
     <div class="cards" id="clsLangCards"></div>
@@ -296,6 +332,7 @@ select,input[type=text],input[type=number]{background:#fbf7ee;border-radius:8px}
 
     <div id="clsPackageWrap" class="hidden">
       <h2 style="margin-top:22px;" data-i18n="cls_step4_heading"></h2>
+      <div class="checkbox-row" style="margin-bottom:12px;"><input type="checkbox" id="clsCompare"><label for="clsCompare" data-i18n="cls_compare_label"></label></div>
       <div class="cards" id="clsPackageCards"></div>
     </div>
 
@@ -349,7 +386,26 @@ select,input[type=text],input[type=number]{background:#fbf7ee;border-radius:8px}
     </div>
 
     <button class="btn-generate" id="generateBtn" disabled data-i18n="btn_generate"></button>
+    <button class="btn-generate hidden" id="splitBtn" type="button" disabled data-i18n="cls_split_btn" style="background:transparent;border:1.5px solid var(--gold);color:var(--gold);margin-top:10px;"></button>
   </div>
+</div>
+
+<button id="qrToggle" type="button">QUICK REPLIES</button>
+<div id="qrPanel">
+  <div class="qr-head"><b>Quick Replies</b><button id="qrClose" type="button">&times;</button></div>
+  <div class="qr-tools">
+    <textarea id="qrQuestion" rows="5" placeholder="Paste the customer's question here — the answer appears automatically"></textarea>
+    <button class="qr-btn" id="qrClear" type="button">Clear</button>
+    <button class="qr-btn" id="qrCopyQuote" type="button">Copy current quote as text</button>
+    <button class="qr-btn" id="qrAddToggle" type="button">+ Add reply</button>
+    <div id="qrAddForm" class="hidden" style="margin-top:10px;">
+      <input type="text" id="qrNewTitle" placeholder="Title (e.g. Refund policy)">
+      <input type="text" id="qrNewKw" placeholder="Keywords, space separated (e.g. refund cancel)">
+      <textarea id="qrNewText" rows="4" placeholder="Reply text"></textarea>
+      <button class="qr-btn pri" id="qrNewSave" type="button">Save reply</button>
+    </div>
+  </div>
+  <div id="qrList"></div>
 </div>
 
 </div>
@@ -494,6 +550,12 @@ const CLASS_1TO1 = {
   standard: { hours:12, fee:{ bm:1020, mandarin:1260, arabic:1140 } }
 };
 const CLASS_SEMI_RATE = { 2:{ bm:60, mandarin:70, arabic:65 }, 3:{ bm:45, mandarin:55, arabic:50 } };
+const AG_FEE_PER_LEVEL = 2600, AG_DAYS_PER_LEVEL = 20;
+const AG_LEVELS = { aep:6, gep:10 };   // AEP brochure lists 6 levels, GEP 10
+const AG_BANDS = { gep:[['g1',1,2],['g2',3,4],['g3',5,6],['g4',7,8],['g5',9,10]], aep:[['a1',1,1],['a2',2,2],['a3',3,3],['a4',4,4],['a5',5,5],['a6',6,6]] };
+const AG_ONE_TIME = { registration: 550, book: 250, visa: 2000 };
+const AG_TXT = {"en": {"g1": ["A1 Starter — Take the First Step", "Build reading, writing, listening and speaking with practical topics like food, family and travel, plus grammar, vocabulary and pronunciation for everyday situations."], "g2": ["A2 Elementary — Keep Building Your Skills", "Improve all four skills, understand social media, articles and daily conversations, and write clear profiles, emails and blogs."], "g3": ["B1 Pre-Intermediate — Step Up Your Game", "Write sharp emails, blogs and reviews, understand conversations on any topic, share opinions and offer advice, with refined pronunciation and sentence stress."], "g4": ["B1+ Intermediate — Find Your Voice in English", "Explore topics like friendships, travel and culture; write emails, reviews and essays; strengthen tenses, modals and conditionals and speak confidently about your experiences and opinions."], "g5": ["B2 Upper-Intermediate — Be Proficient", "Write clear blogs, essays and formal emails, master grammar, vocabulary and pronunciation, and communicate fluently in real-world conversations."], "a1": ["Pre-A1 Beginner — Strong Foundation with the Basics", "Learn the alphabet and numbers; build basic reading, writing, listening and speaking with everyday topics like food, health, money and family."], "a2": ["A1 Elementary — Continue Building Your Academic Skills", "Preview texts, take notes and find main ideas and details; build paragraph writing, basic conversations and email skills."], "a3": ["A2 Pre-Intermediate (IELTS 3.0) — Step Up Your Game", "Find key points, predict meaning and understand the writer's purpose; structure paragraphs, describe visuals and speak clearly with linking words."], "a4": ["B1 Intermediate (IELTS 4.0–5.0) — Find Your Academic Voice", "Skim, scan and understand purpose, audience and tone; write clear paragraphs, organise essays and join discussions with confidence."], "a5": ["B2 Upper-Intermediate (IELTS 5.0–6.0) — You Are Proficient", "Scan for evidence, infer meaning, write impactful essays supported by data, speak confidently in debates and propose solutions."], "a6": ["IELTS Express (IELTS 5.5–6.5) — Ace the IELTS with Confidence", "Master the IELTS format and key strategies; write clearly, speak fluently, understand academic texts and manage your time."]}, "ar": {"g1": ["A1 مبتدئ — الخطوة الأولى", "تطوير القراءة والكتابة والاستماع والمحادثة عبر موضوعات عملية كالطعام والعائلة والسفر، مع القواعد والمفردات والنطق لمواقف الحياة اليومية."], "g2": ["A2 أساسي — واصل بناء مهاراتك", "تحسين المهارات الأربع، وفهم وسائل التواصل والمقالات والمحادثات اليومية، وكتابة ملفات تعريفية ورسائل ومدونات واضحة."], "g3": ["B1 ما قبل المتوسط — ارتقِ بمستواك", "كتابة رسائل ومدونات ومراجعات متقنة، وفهم المحادثات في أي موضوع، وإبداء الآراء وتقديم النصائح مع نطق دقيق ونبرة جمل سليمة."], "g4": ["B1+ متوسط — اعثر على صوتك بالإنجليزية", "استكشاف موضوعات كالصداقة والسفر والثقافة؛ وكتابة رسائل ومراجعات ومقالات؛ وتقوية الأزمنة والأفعال الناقصة والجمل الشرطية والتحدث بثقة عن تجاربك وآرائك."], "g5": ["B2 فوق المتوسط — كن متمكنًا", "كتابة مدونات ومقالات ورسائل رسمية واضحة، وإتقان القواعد والمفردات والنطق، والتواصل بطلاقة في المحادثات الواقعية."], "a1": ["Pre-A1 مبتدئ — أساس متين", "تعلّم الأبجدية والأرقام؛ وبناء مهارات القراءة والكتابة والاستماع والمحادثة الأساسية عبر موضوعات يومية كالطعام والصحة والمال والعائلة."], "a2": ["A1 أساسي — واصل بناء مهاراتك الأكاديمية", "معاينة النصوص وتدوين الملاحظات وإيجاد الأفكار الرئيسية والتفاصيل؛ وبناء كتابة الفقرات والمحادثات الأساسية ومهارات البريد الإلكتروني."], "a3": ["A2 ما قبل المتوسط (IELTS 3.0) — ارتقِ بمستواك", "إيجاد النقاط الأساسية وتوقّع المعنى وفهم قصد الكاتب؛ وتنظيم الفقرات ووصف الرسوم والتحدث بوضوح باستخدام أدوات الربط."], "a4": ["B1 متوسط (IELTS 4.0–5.0) — اعثر على صوتك الأكاديمي", "القراءة السريعة وفهم الغرض والجمهور والنبرة؛ وكتابة فقرات واضحة وتنظيم المقالات والمشاركة في النقاشات بثقة."], "a5": ["B2 فوق المتوسط (IELTS 5.0–6.0) — أنت متمكن", "البحث عن الأدلة واستنتاج المعنى وكتابة مقالات مؤثرة مدعومة بالبيانات والتحدث بثقة في المناظرات واقتراح الحلول."], "a6": ["IELTS Express (IELTS 5.5–6.5) — اجتز IELTS بثقة", "إتقان صيغة اختبار IELTS واستراتيجياته؛ والكتابة بوضوح والتحدث بطلاقة وفهم النصوص الأكاديمية وإدارة الوقت."]}, "zh": {"g1": ["A1 入门 — 迈出第一步", "通过食物、家庭、旅行等实用话题提升读写听说，并学习日常场景所需的语法、词汇与发音。"], "g2": ["A2 初级 — 持续提升技能", "提升听说读写四项技能，读懂社交媒体、文章与日常对话，写出清晰的个人简介、邮件与博客。"], "g3": ["B1 中级前期 — 更上一层楼", "写出得体的邮件、博客与评论，听懂任何话题的对话，表达观点并给出建议，并优化发音与句子重音。"], "g4": ["B1+ 中级 — 找到你的英语声音", "探讨友谊、旅行与文化等话题；撰写邮件、评论与短文；强化时态、情态动词与条件句，自信地谈论经历与观点。"], "g5": ["B2 中高级 — 熟练运用", "写出清晰的博客、文章与正式邮件，掌握语法、词汇与发音，在真实场景中流利沟通。"], "a1": ["Pre-A1 零基础 — 打好基础", "学习字母与数字；通过食物、健康、金钱、家庭等日常话题建立基础的读写听说能力。"], "a2": ["A1 初级 — 继续构建学术技能", "预览文本、做笔记、找出主旨与细节；培养段落写作、基础对话与邮件写作能力。"], "a3": ["A2 中级前期（雅思3.0）— 更上一层楼", "找出要点、预测含义、理解作者意图；组织段落、描述图表，并用连接词清晰表达。"], "a4": ["B1 中级（雅思4.0–5.0）— 找到你的学术声音", "略读与扫读，理解目的、读者与语气；写出清晰段落、组织短文，并自信参与讨论。"], "a5": ["B2 中高级（雅思5.0–6.0）— 熟练运用", "查找论据、推断含义，写出以数据支撑的有力文章，自信参与辩论并提出解决方案。"], "a6": ["雅思冲刺（IELTS 5.5–6.5）— 自信应考", "掌握雅思考试形式与关键策略；清晰写作、流利口语、理解学术文本并合理分配时间。"]}, "fr": {"g1": ["A1 Débutant — Faites le premier pas", "Développez lecture, écriture, écoute et expression orale avec des sujets pratiques (nourriture, famille, voyage), ainsi que grammaire, vocabulaire et prononciation du quotidien."], "g2": ["A2 Élémentaire — Continuez à progresser", "Améliorez les quatre compétences, comprenez réseaux sociaux, articles et conversations quotidiennes, et rédigez profils, e-mails et blogs clairs."], "g3": ["B1 Pré-intermédiaire — Passez à la vitesse supérieure", "Rédigez e-mails, blogs et avis percutants, comprenez des conversations sur tout sujet, donnez votre opinion et des conseils, avec une prononciation affinée."], "g4": ["B1+ Intermédiaire — Trouvez votre voix en anglais", "Explorez l'amitié, le voyage et la culture ; rédigez e-mails, avis et essais ; consolidez temps, modaux et conditionnels et parlez avec assurance de vos expériences et opinions."], "g5": ["B2 Intermédiaire supérieur — Soyez compétent", "Rédigez blogs, essais et e-mails formels clairs, maîtrisez grammaire, vocabulaire et prononciation, et communiquez avec aisance dans la vie réelle."], "a1": ["Pré-A1 Débutant — De solides bases", "Apprenez l'alphabet et les nombres ; construisez les bases de la lecture, de l'écriture, de l'écoute et de l'oral avec des sujets quotidiens (nourriture, santé, argent, famille)."], "a2": ["A1 Élémentaire — Continuez à bâtir vos compétences académiques", "Survolez les textes, prenez des notes, repérez idées principales et détails ; développez la rédaction de paragraphes, les conversations de base et les e-mails."], "a3": ["A2 Pré-intermédiaire (IELTS 3.0) — Passez à la vitesse supérieure", "Repérez les points clés, anticipez le sens et comprenez l'intention de l'auteur ; structurez des paragraphes, décrivez des visuels et parlez clairement avec des connecteurs."], "a4": ["B1 Intermédiaire (IELTS 4.0–5.0) — Trouvez votre voix académique", "Parcourez et repérez le but, le public et le ton ; rédigez des paragraphes clairs, organisez des essais et participez aux discussions avec assurance."], "a5": ["B2 Intermédiaire supérieur (IELTS 5.0–6.0) — Vous êtes compétent", "Cherchez des preuves, déduisez le sens, rédigez des essais percutants appuyés sur des données, argumentez avec assurance et proposez des solutions."], "a6": ["IELTS Express (IELTS 5.5–6.5) — Réussissez l'IELTS avec confiance", "Maîtrisez le format et les stratégies clés de l'IELTS ; écrivez clairement, parlez avec aisance, comprenez les textes académiques et gérez votre temps."]}};
+const AG_DATA = { aep:{ hours:4, indep:0 }, gep:{ hours:3, indep:1 } };
 const CLASS_GROUP = { hours:24, weeks:8, fee:{ bm:750, mandarin:840, arabic:800 } };
 
 /* ---------------- TRANSLATIONS ---------------- */
@@ -517,7 +579,7 @@ en: {
   mode_f2f_name:"Face-to-Face",
   mode_f2f_meta:"In-centre classes, 5 hrs/day",
   mode_online_name:"Online",
-  mode_online_meta:"Live online classes, 4 hrs/day · 6 months only",
+  mode_online_meta:"Live online classes, 3 hrs/day · 6 months only",
   step4_heading:"Step 4 — Delivery Track",
   step4_hint:"Same 120 instruction days — choose the pace that fits your life.",
   trackA_name:"Track A — Intensive",
@@ -588,6 +650,33 @@ en: {
   print_price_breakdown:"Price Breakdown",
   print_includes:"What's Included",
   print_total_payable:"Total Payable",
+  ag_name:"AEP & GEP (10 months)",
+  ag_meta:"Academic English (IELTS prep) · General English · 10 levels",
+  ag_step2_heading:"Step 2 — Choose the Programme",
+  ag_aep:"Academic English Programme (AEP)",
+  ag_gep:"General English Programme (GEP)",
+  ag_aep_meta:"4 hrs/day · 20 days per level",
+  ag_gep_meta:"3 hrs/day + 1 hr independent learning · 20 days per level",
+  ag_levels_label:"Number of levels (each level = 1 month = 20 days of study)",
+  ag_level_opt:(n)=>`${n} ${n===1?"level":"levels"} — ${n} ${n===1?"month":"months"}`,
+  ag_visa_label:"I need a student visa (visa fee is added to this quote)",
+  line_ag_fee:(name,lo,hi,n,price)=>`${name} — ${lo===hi?"Level "+lo:"Levels "+lo+"–"+hi} (${n} × ${price})`,
+  line_ag_book:"Book fee (one-time)",
+  line_ag_visa:"Student visa (one-time)",
+  selection_ag:(name,lo,hi,n)=>`${name} · ${lo===hi?"Level "+lo:"Levels "+lo+"–"+hi} (${n} ${n===1?"month":"months"})`,
+  ag_note_place:"The placement test is free for registered students. Your starting level and study duration are confirmed after the placement test.",
+  ag_note_session:"Morning or afternoon session, depending on your level. The schedule is confirmed at registration.",
+  schedule_ag_format_value:"Face-to-face · full-time",
+  ag_daily_aep:"4 hrs/day",
+  ag_daily_gep:"3 hrs/day + 1 hr independent learning",
+  ag_total_gep:(c,i)=>`${c} hrs class + ${i} hrs independent learning`,
+  curriculum_ag_title:(name)=>`${name}`,
+  curriculum_ag_aep:"Academic English with a focus on IELTS preparation — reading, writing, listening and speaking for academic study.",
+  curriculum_ag_gep:"General English to improve everyday and professional communication — speaking, listening, reading and writing.",
+  ag_note_fulltime:"Full-time face-to-face programme, Monday to Friday. Students must follow the attendance requirements; part-time study is not available.",
+  ag_note_levels:"Each level is 20 days of study (1 month). The fee is charged per level.",
+  ag_note_book:"A physical book is used for these programmes. The online learning platform is not included.",
+  print_footnote_ag:"Fees are charged per level; registration, book and visa fees are one-time on enrolment. Prices in Malaysian Ringgit (MYR). This quote is valid for 14 days.",
   cls_name:"Language Classes",
   cls_meta:"Bahasa Malaysia · Mandarin · Arabic (Fusha)",
   cls_step2_heading:"Step 2 — Choose the Language",
@@ -603,6 +692,9 @@ en: {
   cls_pkg_light:"Monthly Light", cls_pkg_light_meta:"8 hrs/month · 2 × 1 hr/week",
   cls_pkg_standard:"Monthly Standard", cls_pkg_standard_meta:"12 hrs/month · 2 × 1.5 hr/week",
   cls_per_month:"/ month",
+  cls_compare_label:"Show all 3 packages in one quote (comparison — for marketing)",
+  cls_compare_tag:"3 package options",
+  cls_split_btn:"Download each package as a separate PDF (3 files)",
   label_cls_size:"Number of students",
   label_cls_hours:"Hours per student",
   cls_semi_hint:"Fee is per student, per hour. Students must register together (e.g. colleagues or family).",
@@ -707,7 +799,7 @@ ar: {
   mode_f2f_name:"حضوري",
   mode_f2f_meta:"دروس في المركز، 5 ساعات/يوم",
   mode_online_name:"عبر الإنترنت",
-  mode_online_meta:"دروس مباشرة عبر الإنترنت، 4 ساعات/يوم · 6 أشهر فقط",
+  mode_online_meta:"دروس مباشرة عبر الإنترنت، 3 ساعات/يوم · 6 أشهر فقط",
   step4_heading:"الخطوة 4 — مسار الدراسة",
   step4_hint:"نفس 120 يوم تدريب — اختر الوتيرة التي تناسب حياتك.",
   trackA_name:"المسار A — مكثف",
@@ -778,6 +870,33 @@ ar: {
   print_price_breakdown:"تفصيل السعر",
   print_includes:"ما يشمله البرنامج",
   print_total_payable:"الإجمالي المستحق",
+  ag_name:"AEP و GEP (10 أشهر)",
+  ag_meta:"الإنجليزية الأكاديمية (تحضير IELTS) · الإنجليزية العامة · 10 مستويات",
+  ag_step2_heading:"الخطوة 2 — اختر البرنامج",
+  ag_aep:"برنامج الإنجليزية الأكاديمية (AEP)",
+  ag_gep:"برنامج الإنجليزية العامة (GEP)",
+  ag_aep_meta:"4 ساعات/يوم · 20 يومًا لكل مستوى",
+  ag_gep_meta:"3 ساعات/يوم + ساعة تعلّم ذاتي · 20 يومًا لكل مستوى",
+  ag_levels_label:"عدد المستويات (كل مستوى = شهر واحد = 20 يوم دراسة)",
+  ag_level_opt:(n)=>`${n} ${n===1?"مستوى":"مستويات"} — ${n} ${n===1?"شهر":"أشهر"}`,
+  ag_visa_label:"أحتاج إلى تأشيرة طالب (تُضاف رسوم التأشيرة إلى هذا العرض)",
+  line_ag_fee:(name,lo,hi,n,price)=>`${name} — ${lo===hi?"المستوى "+lo:"المستويات "+lo+"–"+hi} (${n} × ${price})`,
+  line_ag_book:"رسوم الكتاب (لمرة واحدة)",
+  line_ag_visa:"تأشيرة الطالب (لمرة واحدة)",
+  selection_ag:(name,lo,hi,n)=>`${name} · ${lo===hi?"المستوى "+lo:"المستويات "+lo+"–"+hi} (${n} ${n===1?"شهر":"أشهر"})`,
+  ag_note_place:"اختبار تحديد المستوى مجاني للطلاب المسجَّلين. يُحدَّد مستوى البداية ومدة الدراسة بعد اختبار تحديد المستوى.",
+  ag_note_session:"فترة صباحية أو بعد الظهر حسب مستواك. يُؤكَّد الجدول عند التسجيل.",
+  schedule_ag_format_value:"حضوري · دوام كامل",
+  ag_daily_aep:"4 ساعات/يوم",
+  ag_daily_gep:"3 ساعات/يوم + ساعة تعلّم ذاتي",
+  ag_total_gep:(c,i)=>`${c} ساعة دراسة + ${i} ساعة تعلّم ذاتي`,
+  curriculum_ag_title:(name)=>`${name}`,
+  curriculum_ag_aep:"إنجليزية أكاديمية مع التركيز على التحضير لاختبار IELTS — القراءة والكتابة والاستماع والمحادثة للدراسة الأكاديمية.",
+  curriculum_ag_gep:"إنجليزية عامة لتحسين التواصل اليومي والمهني — المحادثة والاستماع والقراءة والكتابة.",
+  ag_note_fulltime:"برنامج حضوري بدوام كامل من الإثنين إلى الجمعة. يجب على الطلاب الالتزام بشروط الحضور؛ ولا تتوفر الدراسة بدوام جزئي.",
+  ag_note_levels:"كل مستوى هو 20 يوم دراسة (شهر واحد). تُحتسب الرسوم لكل مستوى.",
+  ag_note_book:"يُستخدم كتاب مطبوع في هذه البرامج. المنصة التعليمية الإلكترونية غير مشمولة.",
+  print_footnote_ag:"تُحتسب الرسوم لكل مستوى؛ رسوم التسجيل والكتاب والتأشيرة تُدفع لمرة واحدة عند التسجيل. الأسعار بالرينغت الماليزي (MYR). هذا العرض صالح لمدة 14 يومًا.",
   cls_name:"دروس اللغات",
   cls_meta:"الماليزية · الصينية (الماندرين) · العربية الفصحى",
   cls_step2_heading:"الخطوة 2 — اختر اللغة",
@@ -793,6 +912,9 @@ ar: {
   cls_pkg_light:"الشهرية الخفيفة", cls_pkg_light_meta:"8 ساعات/شهر · مرتان × ساعة أسبوعيًا",
   cls_pkg_standard:"الشهرية القياسية", cls_pkg_standard_meta:"12 ساعة/شهر · مرتان × 1.5 ساعة أسبوعيًا",
   cls_per_month:"/ شهر",
+  cls_compare_label:"عرض الباقات الثلاث في عرض سعر واحد (مقارنة — للتسويق)",
+  cls_compare_tag:"3 خيارات باقات",
+  cls_split_btn:"تحميل كل باقة كملف PDF منفصل (3 ملفات)",
   label_cls_size:"عدد الطلاب",
   label_cls_hours:"عدد الساعات لكل طالب",
   cls_semi_hint:"الرسوم لكل طالب في الساعة. يجب أن يسجّل الطلاب معًا (مثل الزملاء أو أفراد العائلة).",
@@ -884,7 +1006,7 @@ zh: {
   mode_f2f_name:"面授课程",
   mode_f2f_meta:"中心内授课，每天5小时",
   mode_online_name:"在线课程",
-  mode_online_meta:"在线实时授课，每天4小时 · 仅限6个月课程",
+  mode_online_meta:"在线实时授课，每天3小时 · 仅限6个月课程",
   step4_heading:"第四步 — 授课模式",
   step4_hint:"同样是120个教学日 — 选择适合您生活节奏的方式。",
   trackA_name:"A班 — 密集课程",
@@ -955,6 +1077,33 @@ zh: {
   print_price_breakdown:"价格明细",
   print_includes:"课程包含",
   print_total_payable:"应付总额",
+  ag_name:"AEP 与 GEP（10个月）",
+  ag_meta:"学术英语（雅思备考）· 通用英语 · 10个等级",
+  ag_step2_heading:"第二步 — 选择课程",
+  ag_aep:"学术英语课程（AEP）",
+  ag_gep:"通用英语课程（GEP）",
+  ag_aep_meta:"每天4小时 · 每级20天",
+  ag_gep_meta:"每天3小时 + 1小时自主学习 · 每级20天",
+  ag_levels_label:"等级数量（每级 = 1个月 = 20天学习）",
+  ag_level_opt:(n)=>`${n} 级 — ${n} 个月`,
+  ag_visa_label:"我需要学生签证（签证费将加入此报价）",
+  line_ag_fee:(name,lo,hi,n,price)=>`${name} — ${lo===hi?"第"+lo+"级":"第"+lo+"–"+hi+"级"}（${n} × ${price}）`,
+  line_ag_book:"教材费（一次性）",
+  line_ag_visa:"学生签证（一次性）",
+  selection_ag:(name,lo,hi,n)=>`${name} · ${lo===hi?"第"+lo+"级":"第"+lo+"–"+hi+"级"}（${n} 个月）`,
+  ag_note_place:"已注册学生可免费参加分级测试。起始等级与学习时长将在分级测试后确认。",
+  ag_note_session:"上午或下午班，视您的等级而定。具体时间表将在注册时确认。",
+  schedule_ag_format_value:"面授 · 全日制",
+  ag_daily_aep:"4小时/天",
+  ag_daily_gep:"3小时/天 + 1小时自主学习",
+  ag_total_gep:(c,i)=>`${c} 小时课堂 + ${i} 小时自主学习`,
+  curriculum_ag_title:(name)=>`${name}`,
+  curriculum_ag_aep:"以雅思备考为重点的学术英语 — 面向学术学习的阅读、写作、听力与口语。",
+  curriculum_ag_gep:"提升日常与职场沟通的通用英语 — 口语、听力、阅读与写作。",
+  ag_note_fulltime:"全日制面授课程，周一至周五。学生须遵守出勤要求；不提供兼读制。",
+  ag_note_levels:"每级为20天学习（1个月）。费用按等级收取。",
+  ag_note_book:"本课程使用纸质教材，不包含在线学习平台。",
+  print_footnote_ag:"费用按等级收取；注册费、教材费与签证费为入学时一次性费用。价格以马来西亚令吉（MYR）计算。此报价有效期为14天。",
   cls_name:"语言课程",
   cls_meta:"马来语 · 华语 · 阿拉伯语（标准语）",
   cls_step2_heading:"第二步 — 选择语言",
@@ -970,6 +1119,9 @@ zh: {
   cls_pkg_light:"月度轻量班", cls_pkg_light_meta:"每月8小时 · 每周2次×1小时",
   cls_pkg_standard:"月度标准班", cls_pkg_standard_meta:"每月12小时 · 每周2次×1.5小时",
   cls_per_month:"/ 月",
+  cls_compare_label:"在一份报价中展示全部3个套餐（对比版 — 用于营销）",
+  cls_compare_tag:"3个套餐选项",
+  cls_split_btn:"每个套餐单独下载PDF（共3个文件）",
   label_cls_size:"学生人数",
   label_cls_hours:"每人课时数",
   cls_semi_hint:"按每位学生每小时收费。学生须一同报名（如同事或家人）。",
@@ -1061,7 +1213,7 @@ fr: {
   mode_f2f_name:"En présentiel",
   mode_f2f_meta:"Cours au centre, 5 h/jour",
   mode_online_name:"En ligne",
-  mode_online_meta:"Cours en ligne en direct, 4 h/jour · 6 mois uniquement",
+  mode_online_meta:"Cours en ligne en direct, 3 h/jour · 6 mois uniquement",
   step4_heading:"Étape 4 — Formule de cours",
   step4_hint:"Les mêmes 120 jours d'instruction — choisissez le rythme adapté à votre vie.",
   trackA_name:"Formule A — Intensive",
@@ -1132,6 +1284,33 @@ fr: {
   print_price_breakdown:"Détail des prix",
   print_includes:"Ce qui est inclus",
   print_total_payable:"Total à payer",
+  ag_name:"AEP & GEP (10 mois)",
+  ag_meta:"Anglais académique (préparation IELTS) · Anglais général · 10 niveaux",
+  ag_step2_heading:"Étape 2 — Choisissez le programme",
+  ag_aep:"Programme d'anglais académique (AEP)",
+  ag_gep:"Programme d'anglais général (GEP)",
+  ag_aep_meta:"4 h/jour · 20 jours par niveau",
+  ag_gep_meta:"3 h/jour + 1 h d'apprentissage autonome · 20 jours par niveau",
+  ag_levels_label:"Nombre de niveaux (chaque niveau = 1 mois = 20 jours d'études)",
+  ag_level_opt:(n)=>`${n} ${n===1?"niveau":"niveaux"} — ${n} mois`,
+  ag_visa_label:"J'ai besoin d'un visa étudiant (les frais de visa sont ajoutés à ce devis)",
+  line_ag_fee:(name,lo,hi,n,price)=>`${name} — ${lo===hi?"Niveau "+lo:"Niveaux "+lo+"–"+hi} (${n} × ${price})`,
+  line_ag_book:"Frais de livre (unique)",
+  line_ag_visa:"Visa étudiant (unique)",
+  selection_ag:(name,lo,hi,n)=>`${name} · ${lo===hi?"Niveau "+lo:"Niveaux "+lo+"–"+hi} (${n} mois)`,
+  ag_note_place:"Le test de niveau est gratuit pour les étudiants inscrits. Le niveau de départ et la durée des études sont confirmés après le test.",
+  ag_note_session:"Session du matin ou de l'après-midi selon votre niveau. L'horaire est confirmé à l'inscription.",
+  schedule_ag_format_value:"Présentiel · temps plein",
+  ag_daily_aep:"4 h/jour",
+  ag_daily_gep:"3 h/jour + 1 h d'apprentissage autonome",
+  ag_total_gep:(c,i)=>`${c} h de cours + ${i} h d'apprentissage autonome`,
+  curriculum_ag_title:(name)=>`${name}`,
+  curriculum_ag_aep:"Anglais académique axé sur la préparation à l'IELTS — lecture, écriture, écoute et expression orale pour les études.",
+  curriculum_ag_gep:"Anglais général pour améliorer la communication quotidienne et professionnelle — expression orale, écoute, lecture et écriture.",
+  ag_note_fulltime:"Programme en présentiel à temps plein, du lundi au vendredi. Les étudiants doivent respecter les exigences d'assiduité ; les études à temps partiel ne sont pas possibles.",
+  ag_note_levels:"Chaque niveau représente 20 jours d'études (1 mois). Les frais sont facturés par niveau.",
+  ag_note_book:"Un livre papier est utilisé pour ces programmes. La plateforme d'apprentissage en ligne n'est pas incluse.",
+  print_footnote_ag:"Frais facturés par niveau ; les frais d'inscription, de livre et de visa sont uniques, payables à l'inscription. Prix en ringgit malaisien (MYR). Ce devis est valable 14 jours.",
   cls_name:"Cours de langues",
   cls_meta:"Bahasa Malaysia · Mandarin · Arabe (Fusha)",
   cls_step2_heading:"Étape 2 — Choisissez la langue",
@@ -1147,6 +1326,9 @@ fr: {
   cls_pkg_light:"Mensuel Light", cls_pkg_light_meta:"8 h/mois · 2 × 1 h/semaine",
   cls_pkg_standard:"Mensuel Standard", cls_pkg_standard_meta:"12 h/mois · 2 × 1,5 h/semaine",
   cls_per_month:"/ mois",
+  cls_compare_label:"Afficher les 3 forfaits dans un seul devis (comparatif — pour le marketing)",
+  cls_compare_tag:"3 forfaits au choix",
+  cls_split_btn:"Télécharger chaque forfait en PDF séparé (3 fichiers)",
   label_cls_size:"Nombre d'étudiants",
   label_cls_hours:"Heures par étudiant",
   cls_semi_hint:"Tarif par étudiant et par heure. Les étudiants doivent s'inscrire ensemble (ex. collègues ou famille).",
@@ -1221,7 +1403,8 @@ fr: {
 }
 };
 
-let state = { lang:'en', programme:null, startLevel:1, targetLevel:5, mode:null, track:null, examGroup:null, examSpecific:null, examRegOption:false, edutourism:false, docType:'quote', needVisa:true, clsLang:null, clsFormat:null, clsPackage:null, clsSize:2, clsHours:10 };
+let state = { lang:'en', programme:null, startLevel:1, targetLevel:5, mode:null, track:null, examGroup:null, examSpecific:null, examRegOption:false, edutourism:false, docType:'quote', needVisa:true, clsLang:null, clsFormat:null, clsPackage:null, clsSize:2, clsHours:10, clsCompare:false, agProg:null, agStart:1, agEnd:10, agVisa:true };
+const isCompare = () => state.programme==='class' && state.clsFormat==='1to1' && state.clsCompare;
 const tr = key => T[state.lang][key] !== undefined ? T[state.lang][key] : T.en[key];
 
 /* ---------------- RENDER STATIC TEXT ---------------- */
@@ -1253,13 +1436,17 @@ function renderProgrammeCards(){
   exam.dataset.programme='exam';
   const cls = makeCard(tr('cls_name'), tr('cls_meta'));
   cls.dataset.programme='class';
-  [pep,exam,cls].forEach(card=>{
+  const ag = makeCard(tr('ag_name'), tr('ag_meta'));
+  ag.dataset.programme='ag';
+  [pep,ag,exam,cls].forEach(card=>{
     if(state.programme===card.dataset.programme) card.classList.add('selected');
     card.addEventListener('click', ()=>{
       state.programme = card.dataset.programme;
       document.getElementById('pepSection').classList.toggle('hidden', state.programme!=='pep');
       document.getElementById('examSection').classList.toggle('hidden', state.programme!=='exam');
       document.getElementById('classSection').classList.toggle('hidden', state.programme!=='class');
+      document.getElementById('agSection').classList.toggle('hidden', state.programme!=='ag');
+      renderAgCards();
       renderClassCards();
       renderProgrammeCards();
       updateSummary();
@@ -1338,6 +1525,31 @@ function examGroupName(key){
   if(key==='aptis_linguaskill') return tr('examAL_name');
 }
 
+function agName(k){ return tr(k==='aep' ? 'ag_aep' : 'ag_gep'); }
+function agRange(){ const lo=Math.min(state.agStart,state.agEnd), hi=Math.max(state.agStart,state.agEnd); return {lo,hi,n:hi-lo+1}; }
+function renderAgCards(){
+  const c = document.getElementById('agCards'); c.innerHTML='';
+  ['aep','gep'].forEach(k=>{
+    const card = makeCard(agName(k), tr(k==='aep' ? 'ag_aep_meta' : 'ag_gep_meta'), fmt(AG_FEE_PER_LEVEL)+' / '+tr('level_word').toLowerCase());
+    if(state.agProg===k) card.classList.add('selected');
+    card.addEventListener('click', ()=>{
+      state.agProg=k;
+      const mx=AG_LEVELS[k]; state.agStart=Math.min(state.agStart,mx); state.agEnd=mx;
+      renderAgCards(); updateSummary();
+    });
+    c.appendChild(card);
+  });
+  const mx = state.agProg ? AG_LEVELS[state.agProg] : 10;
+  [['agStart',state.agStart],['agEnd',state.agEnd]].forEach(([id,cur])=>{
+    const sel=document.getElementById(id); sel.innerHTML='';
+    for(let i=1;i<=mx;i++){ const o=document.createElement('option'); o.value=i; o.textContent=`${tr('level_word')} ${i}`; if(i===cur) o.selected=true; sel.appendChild(o); }
+  });
+  document.getElementById('agVisa').checked = state.agVisa;
+}
+document.getElementById('agStart').addEventListener('change', e=>{ state.agStart=parseInt(e.target.value,10); updateSummary(); });
+document.getElementById('agEnd').addEventListener('change', e=>{ state.agEnd=parseInt(e.target.value,10); updateSummary(); });
+document.getElementById('agVisa').addEventListener('change', e=>{ state.agVisa=e.target.checked; updateSummary(); });
+
 function renderExamCards(){
   const c = document.getElementById('examCards');
   c.innerHTML='';
@@ -1403,6 +1615,8 @@ function renderClassCards(){
   document.getElementById('clsSemiWrap').classList.toggle('hidden', state.clsFormat!=='semi');
   document.getElementById('clsGroupNote').classList.toggle('hidden', state.clsFormat!=='group');
 
+  document.getElementById('clsCompare').checked = state.clsCompare;
+  document.getElementById('clsPackageCards').classList.toggle('hidden', state.clsCompare);
   const pc = document.getElementById('clsPackageCards'); pc.innerHTML='';
   ['p10','light','standard'].forEach(k=>{
     const price = state.clsLang ? fmt(CLASS_1TO1[k].fee[state.clsLang]) + (k!=='p10' ? ' ' + tr('cls_per_month') : '') : '';
@@ -1418,13 +1632,14 @@ function renderClassCards(){
 
 function buildClassNotes(data){
   const n = [tr('cls_note_advance'), tr('cls_note_resched'), tr('cls_note_levels')];
-  if(data.clsFormat==='1to1') n.push(data.clsPackage==='p10' ? tr('cls_note_p10') : tr('cls_note_monthly'));
+  if(data.clsFormat==='1to1'){ if(data.compare) n.push(tr('cls_note_p10'), tr('cls_note_monthly')); else n.push(data.clsPackage==='p10' ? tr('cls_note_p10') : tr('cls_note_monthly')); }
   if(data.clsFormat==='group') n.push(tr('cls_note_group'));
   n.push(tr('cls_note_private'), tr('cls_note_regmat'), tr('cls_note_teacher'));
   if(data.clsLang==='arabic') n.push(tr('cls_note_arabic'));
   return n;
 }
 
+document.getElementById('clsCompare').addEventListener('change', e=>{ state.clsCompare=e.target.checked; renderClassCards(); updateSummary(); });
 document.getElementById('clsSize').addEventListener('change', e=>{ state.clsSize=+e.target.value; updateSummary(); });
 document.getElementById('clsHours').addEventListener('input', e=>{ state.clsHours=e.target.value; updateSummary(); });
 
@@ -1459,6 +1674,7 @@ function pepLevelBreakdown(){
 }
 
 function updateSummary(){
+  updateDocTypeUI();
   const box = document.getElementById('summaryLines');
   const btn = document.getElementById('generateBtn');
   let lines = [], total = 0, ready = false, selectionText = '';
@@ -1493,6 +1709,17 @@ function updateSummary(){
     }
   }
 
+  if(state.programme==='ag' && state.agProg){
+    const {lo,hi,n} = agRange(), fee = AG_FEE_PER_LEVEL*n;
+    lines.push({label:tr('line_ag_fee')(agName(state.agProg), lo, hi, n, fmt(AG_FEE_PER_LEVEL)), amt:fee});
+    lines.push({label:tr('line_registration'), amt:AG_ONE_TIME.registration});
+    lines.push({label:tr('line_ag_book'), amt:AG_ONE_TIME.book});
+    total += fee + AG_ONE_TIME.registration + AG_ONE_TIME.book;
+    if(state.agVisa){ lines.push({label:tr('line_ag_visa'), amt:AG_ONE_TIME.visa}); total += AG_ONE_TIME.visa; }
+    ready = true;
+    selectionText = tr('selection_ag')(agName(state.agProg), lo, hi, n);
+  }
+
   if(state.programme==='exam' && state.examGroup){
     const g = EXAM_GROUP_DATA[state.examGroup];
     lines.push({label:tr('line_exam_fee')(examGroupName(state.examGroup), g.days, g.hours, g.total), amt:g.fee});
@@ -1518,7 +1745,14 @@ function updateSummary(){
 
   if(state.programme==='class' && state.clsLang && state.clsFormat){
     const L = clsLangName(state.clsLang);
-    if(state.clsFormat==='1to1' && state.clsPackage){
+    if(state.clsFormat==='1to1' && state.clsCompare){
+      ['p10','light','standard'].forEach(k=>{
+        const pk = CLASS_1TO1[k], fee = pk.fee[state.clsLang];
+        lines.push({label:tr('line_cls_1to1')(L, clsPkgName(k), pk.hours), amt:fee, display:fmt(fee)+(k!=='p10' ? ' '+tr('cls_per_month') : '')});
+      });
+      ready = true;
+      selectionText = tr('selection_cls')(L, clsFmtName('1to1')+' · '+tr('cls_compare_tag'));
+    } else if(state.clsFormat==='1to1' && state.clsPackage){
       const pk = CLASS_1TO1[state.clsPackage];
       const fee = pk.fee[state.clsLang];
       lines.push({label:tr('line_cls_1to1')(L, clsPkgName(state.clsPackage), pk.hours), amt:fee});
@@ -1544,6 +1778,7 @@ function updateSummary(){
   if(!lines.length){
     box.innerHTML = `<div class="empty-note">${tr('summary_empty')}</div>`;
     btn.disabled = true;
+    document.getElementById('splitBtn').disabled = true;
     window._quoteData = null;
     return;
   }
@@ -1551,9 +1786,10 @@ function updateSummary(){
   box.innerHTML = lines.map(l=>{
     const val = l.display!==undefined ? l.display : fmt(l.amt);
     return `<div class="line"><span class="l">${l.label}</span><span class="r">${val}</span></div>`;
-  }).join('') + `<div class="line total"><span class="l">${tr('line_total')}</span><span class="r">${fmt(total)}</span></div>`;
+  }).join('') + (isCompare() ? '' : `<div class="line total"><span class="l">${tr('line_total')}</span><span class="r">${fmt(total)}</span></div>`);
 
   btn.disabled = !ready;
+  document.getElementById('splitBtn').disabled = !ready;
 
   let levelsList = [];
   if(state.programme==='pep'){
@@ -1566,7 +1802,8 @@ function updateSummary(){
     programme: state.programme, levels: levelsList,
     mode: state.mode, track: state.track,
     examGroup: state.examGroup, examSpecific: state.examSpecific,
-    clsLang: state.clsLang, clsFormat: state.clsFormat, clsPackage: state.clsPackage, clsSize: state.clsSize, clsHours: parseFloat(state.clsHours)
+    agProg: state.agProg, agLo: agRange().lo, agHi: agRange().hi, agLevels: agRange().n,
+    clsLang: state.clsLang, clsFormat: state.clsFormat, clsPackage: state.clsPackage, clsSize: state.clsSize, clsHours: parseFloat(state.clsHours), compare: isCompare()
   };
 }
 
@@ -1574,7 +1811,7 @@ function updateSummary(){
 function buildScheduleRows(data){
   const rows = [];
   if(data.programme==='pep'){
-    const dailyHours = data.mode==='f2f' ? 5 : 4;
+    const dailyHours = data.mode==='f2f' ? 5 : 3;
     const totalDays = data.levels.reduce((sum,lvl)=>sum+LEVEL_DAYS[lvl],0);
     const totalHours = totalDays*dailyHours;
     const months = data.mode==='f2f' ? TRACK_MONTHS[data.track] : ONLINE_MONTHS;
@@ -1585,6 +1822,14 @@ function buildScheduleRows(data){
     rows.push([tr('schedule_daily_hours_label'), `${dailyHours} ${tr('hrs_day_word')}`]);
     rows.push([tr('schedule_total_days_label'), `${totalDays} ${tr('days_word')}`]);
     rows.push([tr('schedule_total_hours_label'), `${totalHours} ${tr('hrs_word')}`]);
+  } else if(data.programme==='ag'){
+    const a = AG_DATA[data.agProg], n = data.agLevels, days = n*AG_DAYS_PER_LEVEL;
+    rows.push([tr('schedule_format_label'), tr('schedule_ag_format_value')]);
+    rows.push([tr('schedule_duration_label'), `${n} ${tr('months_word')}`]);
+    rows.push([tr('schedule_weekly_label'), tr('weekly_5')]);
+    rows.push([tr('schedule_daily_hours_label'), tr(data.agProg==='aep' ? 'ag_daily_aep' : 'ag_daily_gep')]);
+    rows.push([tr('schedule_total_days_label'), `${days} ${tr('days_word')}`]);
+    rows.push([tr('schedule_total_hours_label'), a.indep ? tr('ag_total_gep')(a.hours*days, a.indep*days) : `${a.hours*days} ${tr('hrs_word')}`]);
   } else if(data.programme==='exam'){
     const g = EXAM_GROUP_DATA[data.examGroup];
     rows.push([tr('schedule_format_label'), tr('schedule_exam_format_value')]);
@@ -1597,7 +1842,13 @@ function buildScheduleRows(data){
     const f = data.clsFormat;
     rows.push([tr('schedule_format_label'), `${tr('schedule_cls_format_value')} · ${clsFmtName(f)}`]);
     rows.push([tr('schedule_cls_language_label'), clsLangName(data.clsLang)]);
-    if(f==='1to1'){
+    if(f==='1to1' && data.compare){
+      ['p10','light','standard'].forEach(k=>{
+        const weekly = k==='light' ? tr('cls_weekly_1') : k==='standard' ? tr('cls_weekly_15') : null;
+        const valid = k==='p10' ? tr('cls_valid_p10') : tr('cls_valid_monthly');
+        rows.push([clsPkgName(k), [CLASS_1TO1[k].hours+' '+tr('hrs_word'), weekly, valid].filter(Boolean).join(' · ')]);
+      });
+    } else if(f==='1to1'){
       const pk = CLASS_1TO1[data.clsPackage];
       rows.push([tr('schedule_cls_package_label'), clsPkgName(data.clsPackage)]);
       rows.push([tr('schedule_total_hours_label'), `${pk.hours} ${tr('hrs_word')}`]);
@@ -1633,6 +1884,14 @@ function buildCurriculum(data){
       const cefrRange = t.cefr.length>1 ? `${t.cefr[0]} → ${t.cefr[t.cefr.length-1]}` : t.cefr[0];
       return `<div style="margin-bottom:8px;"><b>${tr('level_word')} ${t.levels.join(', ')} — ${tierName}</b> (CEFR ${cefrRange})<br>${focus}</div>`;
     }).join('');
+  } else if(data.programme==='ag'){
+    const txt = (AG_TXT[state.lang]||AG_TXT.en);
+    return AG_BANDS[data.agProg].filter(([id,a,b])=>b>=data.agLo && a<=data.agHi).map(([id,a,b])=>{
+      const from=Math.max(a,data.agLo), to=Math.min(b,data.agHi);
+      const lv = from===to ? `${tr('level_word')} ${from}` : `${tr('level_word')} ${from}–${to}`;
+      const t = txt[id] || AG_TXT.en[id];
+      return `<div style="margin-bottom:8px;"><b>${lv} — ${t[0]}</b><br>${t[1]}</div>`;
+    }).join('');
   } else if(data.programme==='exam'){
     const label = examGroupName(data.examGroup);
     return `<div><b>${tr('curriculum_exam_title')(label)}</b><br>${tr('curriculum_exam_desc')(data.examSpecific)}</div>`;
@@ -1657,14 +1916,15 @@ function renderQuoteDoc(data){
   document.getElementById('pTable').innerHTML = data.lines.map(l=>{
     const val = l.display!==undefined ? l.display : fmt(l.amt);
     return `<tr><td>${l.label}</td><td class="amt">${val}</td></tr>`;
-  }).join('') + `<tr><td class="grand">${tr('print_total_payable')}</td><td class="amt grand">${fmt(data.total)}</td></tr>`;
-  const isCls = data.programme==='class';
+  }).join('') + (data.compare ? '' : `<tr><td class="grand">${tr('print_total_payable')}</td><td class="amt grand">${fmt(data.total)}</td></tr>`);
+  const isAg = data.programme==='ag';
+  const isCls = data.programme==='class' || isAg;
   const includes = isCls ? [] : (data.programme==='pep' ? tr('pep_includes') : tr('exam_includes'));
   document.getElementById('pIncludes').innerHTML = includes.map(i=>`<li>${i}</li>`).join('');
   ['pIncludesHeading','pIncludes'].forEach(id=>document.getElementById(id).classList.toggle('hidden', isCls));
   ['pNotesHeading','pNotes'].forEach(id=>document.getElementById(id).classList.toggle('hidden', !isCls));
-  document.getElementById('pNotes').innerHTML = isCls ? buildClassNotes(data).map(i=>`<li>${i}</li>`).join('') : '';
-  document.getElementById('pFootnote').textContent = tr(isCls ? 'print_footnote_cls' : 'print_footnote');
+  document.getElementById('pNotes').innerHTML = isAg ? ['ag_note_fulltime','ag_note_levels','ag_note_session','ag_note_place','ag_note_book'].map(k=>`<li>${tr(k)}</li>`).join('') : (isCls ? buildClassNotes(data).map(i=>`<li>${i}</li>`).join('') : '');
+  document.getElementById('pFootnote').textContent = tr(isAg ? 'print_footnote_ag' : isCls ? 'print_footnote_cls' : 'print_footnote');
 }
 
 /* ---------------- INVOICE / RECEIPT ---------------- */
@@ -1729,6 +1989,9 @@ window.addEventListener('afterprint', ()=>{
 
 /* ---------------- DOCUMENT TYPE SWITCH ---------------- */
 function updateDocTypeUI(){
+  if(isCompare()) state.docType='quote';
+  document.getElementById('docTypeSwitch').classList.toggle('hidden', isCompare());
+  document.getElementById('splitBtn').classList.toggle('hidden', !isCompare());
   document.querySelectorAll('#docTypeSwitch button').forEach(b=>{
     b.classList.toggle('active', b.dataset.doctype===state.docType);
   });
@@ -1760,14 +2023,169 @@ function renderAll(){
   renderModeCards();
   renderTrackCards();
   renderExamCards();
+  renderAgCards();
   renderClassCards();
   if(state.examGroup) renderExamSpecificSelect();
   updateSummary();
   updateDocTypeUI();
 }
 
+/* ---------------- SEPARATE PDF PER PACKAGE ---------------- */
+document.getElementById('splitBtn').addEventListener('click', ()=>{
+  const base = window._quoteData;
+  if(!base || !base.compare || !base.ready) return;
+  const L = clsLangName(base.clsLang);
+  const name = document.getElementById('studentName').value.trim();
+  const origTitle = document.title;
+  const quoteArea = document.getElementById('printArea');
+  document.getElementById('printAreaBiz').classList.remove('show');
+  ['p10','light','standard'].forEach(k=>{
+    const pk = CLASS_1TO1[k], fee = pk.fee[base.clsLang];
+    const data = Object.assign({}, base, {
+      compare:false, clsPackage:k, total:fee,
+      lines:[
+        {label:tr('line_cls_1to1')(L, clsPkgName(k), pk.hours), amt:fee, display:fmt(fee)+(k!=='p10' ? ' '+tr('cls_per_month') : '')},
+        {label:tr('line_cls_regmat'), amt:null, display:tr('cls_regmat_display')}
+      ],
+      selectionText: tr('selection_cls')(L, clsFmtName('1to1'))
+    });
+    renderQuoteDoc(data);
+    quoteArea.classList.add('show');
+    document.title = `Quote - ${L} - ${clsPkgName(k)}` + (name ? ` - ${name}` : '');
+    window.print();
+    quoteArea.classList.remove('show');
+  });
+  document.title = origTitle;
+});
+
+/* ---------------- QUICK REPLIES ---------------- */
+const QR_DEFAULTS = [
+ {id:'classsize', title:'Class size', kw:'class size maximum student many group people number عدد طلاب الطلاب',
+  text:()=>`Our classes have a maximum of 10 to 15 students, depending on the class.`},
+ {id:'online_vs_f2f', title:'Online vs face-to-face (hours & content)', kw:'online face difference hour total study same content why less longer اونلاين أونلاين حضوري ساعات فرق',
+  text:()=>`The programme and course content are the same for face-to-face and online — only the delivery method is different.\n\nOnline classes are 3 hours a day because most students cannot commit to long hours of study online, and a shorter session is more productive. The fees are also different for each mode.`},
+ {id:'timing', title:'Class timing / schedule', kw:'time timing schedule when start morning evening day daily hour موعد وقت جدول متى',
+  text:()=>`Class times depend on our academic timetable. We will confirm your exact schedule once you enrol.`},
+ {id:'pep_fees', title:'PEP fees', kw:'fee price cost pep english how much tuition pay سعر اسعار أسعار رسوم تكلفة كم',
+  text:()=>`PEP fees per level (face-to-face / online):\n• Foundations (Levels 1–2): ${fmt(PEP_FEES.foundation.f2f)} / ${fmt(PEP_FEES.foundation.online)}\n• Mastery (Levels 3–5): ${fmt(PEP_FEES.mastery.f2f)} / ${fmt(PEP_FEES.mastery.online)}\n\nOne-time fees: registration ${fmt(PEP_ONE_TIME.registration)} and resource ${fmt(PEP_ONE_TIME.resource)}. Student visa fees apply for face-to-face students who need a visa.`},
+ {id:'agep', title:'AEP & GEP (10 months)', kw:'aep gep academic general ielts ten 10 months level slower pace independent',
+  text:()=>`AEP (Academic English, IELTS prep, ${AG_LEVELS.aep} levels) and GEP (General English, ${AG_LEVELS.gep} levels): 1 level = 1 month = 20 days of study, ${fmt(AG_FEE_PER_LEVEL)} per level. Start and end level are set by the placement test (free for registered students).\n• AEP: 4 hrs/day\n• GEP: 3 hrs/day + 1 hr independent learning\n\nOne-time fees: registration ${fmt(AG_ONE_TIME.registration)}, book ${fmt(AG_ONE_TIME.book)}, student visa ${fmt(AG_ONE_TIME.visa)}. Classes are Monday to Friday, full-time.`},
+ {id:'visa', title:'Student visa', kw:'visa student permit renew renewal immigration passport تأشيرة فيزا',
+  text:()=>`Student visa (face-to-face): ${fmt(PEP_ONE_TIME.visa6mo)} for the first 6 months, plus ${fmt(PEP_ONE_TIME.visaRenewal)} for each 6-month renewal.\n\nTrack A (6 months) needs no renewal; Tracks B and C (8 and 10 months) need one renewal.`},
+ {id:'pep_structure', title:'PEP levels & placement test', kw:'level structure a1 c1 cefr placement test start beginner foundation mastery',
+  text:()=>`PEP has 5 levels from A1 to C1 — Levels 1–2 are Foundations and Levels 3–5 are Mastery — with 120 instruction days for the full programme.\n\nNot sure which level to start from? Our placement test will confirm your starting level.`},
+ {id:'tracks', title:'Face-to-face tracks (A / B / C)', kw:'track pace intensive standard extended month week days duration long',
+  text:()=>`All tracks have the same 120 instruction days — choose the pace that fits you:\n• Track A — Intensive: 6 months, 5 days/week (Mon–Fri)\n• Track B — Standard: 8 months, alternating 4 and 3 days/week\n• Track C — Extended: 10 months, 3 days/week\n\nOnline is 6 months.`},
+ {id:'exam', title:'Exam preparation fees', kw:'exam ielts toefl muet pte aptis linguaskill preparation test fee price',
+  text:()=>`Exam preparation (face-to-face, intensive):\n`+EXAM_GROUP_KEYS.map(k=>{const g=EXAM_GROUP_DATA[k];return `• ${examGroupName(k)}: ${fmt(g.fee)} — ${g.days} days × ${g.hours} hrs (${g.total} hrs)`;}).join('\n')+`\n\nPlus one-time registration ${fmt(EXAM_ONE_TIME.registration)} and resource ${fmt(EXAM_ONE_TIME.resource)}. The exam body's own registration fee is paid directly to them.`},
+ {id:'lang_fees', title:'Language class fees (BM / Mandarin / Arabic)', kw:'language malay malaysia bahasa mandarin chinese arabic fusha class 1-to-1 private package fee price',
+  text:()=>{const row=k=>CLASS_LANGS.map(l=>`${tr('cls_'+l)} ${fmt(CLASS_1TO1[k].fee[l])}`).join(' / ');return `Language classes — face-to-face, 1-to-1:\n• 10-hour package: ${row('p10')}\n• Monthly Light (8 hrs/month): ${row('light')}\n• Monthly Standard (12 hrs/month): ${row('standard')}\n\nSemi-private (2–3 students) and group courses are also available. Registration and materials fees apply as per our standard schedule.`;}},
+ {id:'lang_terms', title:'Language class terms', kw:'reschedule cancel late missed valid expire advance terms policy',
+  text:()=>`• All packages are paid in advance (no pay-per-class).\n• Rescheduling needs 24 hours' notice — late cancellations and no-shows count as classes taken.\n• The 10-hour package is valid for 2 months from the first class.\n• Teacher and start date are confirmed once teacher availability is checked.`},
+ {id:'payment', title:'Payment details', kw:'payment pay bank transfer account swift maybank',
+  text:()=>`Payment can be made by bank transfer to:\nPremium Entrepreneur Consultant Sdn. Bhd.\nAccount No: 5640 8950 7829\nSWIFT Code: MBBEMYKLBBG\nBank: Malayan Banking Berhad (Maybank)\n\nPlease send us the transfer slip once done.`},
+ {id:'validity', title:'Quote validity', kw:'valid validity expire quote currency ringgit',
+  text:()=>`Our quotes are valid for 14 days. All prices are in Malaysian Ringgit (MYR).`},
+ {id:'contact', title:'Contact details', kw:'contact phone whatsapp email website call reach address',
+  text:()=>`You can reach us at +60 16-900 0098, inquiry@premium.edu.my, or premium.edu.my.`}
+];
+const qrLoad=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const qrStore=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let qrEditing=null;
+
+function qrAll(){
+  const ov=qrLoad('plc_qr_ov',{}), custom=qrLoad('plc_qr_custom',[]);
+  return QR_DEFAULTS.map(r=>({id:r.id,title:r.title,kw:r.kw,text:ov[r.id]!==undefined?ov[r.id]:r.text(),edited:ov[r.id]!==undefined,custom:false}))
+    .concat(custom.map(r=>({id:r.id,title:r.title,kw:r.kw,text:r.text,edited:false,custom:true})));
+}
+function qrScore(r,q){
+  if(!q) return 0;
+  const ql=q.toLowerCase();
+  return r.kw.toLowerCase().split(/\s+/).filter(k=>k.length>2).reduce((n,k)=>n+(ql.includes(k)?1:0),0);
+}
+function qrAnswer(q){
+  const all=qrAll(), picked=[];
+  q.split(/[?؟\n.!]+/).map(x=>x.trim()).filter(x=>x.length>2).forEach(pc=>{
+    let best=null,bs=0;
+    all.forEach(r=>{const sc=qrScore(r,pc); if(sc>bs){bs=sc;best=r;}});
+    if(best && !picked.includes(best)) picked.push(best);
+  });
+  return picked;
+}
+function qrCopy(text,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='Copied!';setTimeout(()=>btn.textContent=o,1200);};
+  const fb=()=>{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){}t.remove();};
+  if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done,fb); else fb();
+}
+function qrBtn(label,cls,fn){const b=document.createElement('button');b.type='button';b.className='qr-btn '+(cls||'');b.textContent=label;b.addEventListener('click',()=>fn(b));return b;}
+
+function qrRender(){
+  const q=document.getElementById('qrQuestion').value.trim();
+  const list=qrAll().map(r=>({r,s:qrScore(r,q)}));
+  if(q) list.sort((a,b)=>b.s-a.s);
+  const box=document.getElementById('qrList'); box.innerHTML='';
+  if(q){
+    const picked=qrAnswer(q);
+    const blk=document.createElement('div'); blk.className='qr-card'; blk.style.borderColor='var(--red)';
+    const hd=document.createElement('div'); hd.className='qr-title';
+    hd.textContent=picked.length?'Answer ('+picked.map(r=>r.title).join(' + ')+')':'No automatic match — pick a reply below or add one';
+    blk.appendChild(hd);
+    if(picked.length){
+      const ta=document.createElement('textarea'); ta.rows=Math.min(16,6+picked.length*4); ta.value=picked.map(r=>r.text).join('\n\n'); blk.appendChild(ta);
+      blk.appendChild(qrBtn('Copy answer','pri',b=>qrCopy(ta.value,b)));
+    }
+    box.appendChild(blk);
+  }
+  list.forEach(({r,s},i)=>{
+    const card=document.createElement('div'); card.className='qr-card';
+    const h=document.createElement('div'); h.className='qr-title'; h.textContent=r.title;
+    if(q && s>0 && i<3){const em=document.createElement('em');em.textContent='best match';h.appendChild(em);}
+    card.appendChild(h);
+    if(qrEditing===r.id){
+      const ta=document.createElement('textarea'); ta.rows=7; ta.value=r.text; card.appendChild(ta);
+      card.appendChild(qrBtn('Save','pri',()=>{
+        if(r.custom){const c=qrLoad('plc_qr_custom',[]);const it=c.find(x=>x.id===r.id);if(it)it.text=ta.value;qrStore('plc_qr_custom',c);}
+        else{const ov=qrLoad('plc_qr_ov',{});ov[r.id]=ta.value;qrStore('plc_qr_ov',ov);}
+        qrEditing=null;qrRender();}));
+      card.appendChild(qrBtn('Cancel','',()=>{qrEditing=null;qrRender();}));
+      if(r.custom) card.appendChild(qrBtn('Delete','',()=>{qrStore('plc_qr_custom',qrLoad('plc_qr_custom',[]).filter(x=>x.id!==r.id));qrEditing=null;qrRender();}));
+      else if(r.edited) card.appendChild(qrBtn('Reset to default','',()=>{const ov=qrLoad('plc_qr_ov',{});delete ov[r.id];qrStore('plc_qr_ov',ov);qrEditing=null;qrRender();}));
+    } else {
+      const t=document.createElement('div'); t.className='qr-text'; t.textContent=r.text; card.appendChild(t);
+      card.appendChild(qrBtn('Copy','pri',b=>qrCopy(r.text,b)));
+      card.appendChild(qrBtn('Edit','',()=>{qrEditing=r.id;qrRender();}));
+    }
+    box.appendChild(card);
+  });
+}
+function quoteAsText(){
+  const d=window._quoteData; if(!d) return '';
+  return d.selectionText+'\n'+d.lines.map(l=>'• '+l.label+': '+(l.display!==undefined?l.display:fmt(l.amt))).join('\n')+(d.compare?'':'\nTotal: '+fmt(d.total));
+}
+document.getElementById('qrToggle').addEventListener('click',()=>{document.getElementById('qrPanel').classList.toggle('open');qrRender();document.getElementById('qrQuestion').focus();});
+document.getElementById('qrClose').addEventListener('click',()=>document.getElementById('qrPanel').classList.remove('open'));
+document.getElementById('qrQuestion').addEventListener('input',qrRender);
+document.getElementById('qrClear').addEventListener('click',()=>{document.getElementById('qrQuestion').value='';qrRender();document.getElementById('qrQuestion').focus();});
+document.getElementById('qrCopyQuote').addEventListener('click',e=>{
+  const t=quoteAsText();
+  if(!t){const b=e.target,o=b.textContent;b.textContent='Build a quote first';setTimeout(()=>b.textContent=o,1500);return;}
+  qrCopy(t,e.target);
+});
+document.getElementById('qrAddToggle').addEventListener('click',()=>document.getElementById('qrAddForm').classList.toggle('hidden'));
+document.getElementById('qrNewSave').addEventListener('click',()=>{
+  const title=document.getElementById('qrNewTitle').value.trim(), text=document.getElementById('qrNewText').value.trim();
+  if(!title||!text) return;
+  const c=qrLoad('plc_qr_custom',[]);
+  c.push({id:'c'+Date.now(),title,kw:(document.getElementById('qrNewKw').value+' '+title).trim(),text});
+  qrStore('plc_qr_custom',c);
+  ['qrNewTitle','qrNewKw','qrNewText'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('qrAddForm').classList.add('hidden');
+  qrRender();
+});
+
 bindLevelSelects();
 renderAll();
+qrRender();
 </script>
 </body>
 </html>
