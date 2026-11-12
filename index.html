@@ -127,6 +127,20 @@
   .quote-doc .footnote{ font-family:Arial,sans-serif; font-size:10.5px; color:#888; margin-top:26px; line-height:1.6; border-top:1px solid #eee; padding-top:12px; }
   .quote-doc ul{ font-family:Arial,sans-serif; font-size:12.5px; line-height:1.8; margin:0; padding-inline-start:18px; }
 
+  /* ---- PEP academic calendar ---- */
+  .pep-cal{ margin-top:22px; border:1.5px solid var(--border); border-radius:8px; padding:12px 16px; background:#fff; }
+  .pep-cal summary{ cursor:pointer; font-weight:700; font-size:14px; letter-spacing:0.5px; text-transform:uppercase; color:var(--navy); }
+  .pep-cal .hint{ margin:8px 0 12px; }
+  .cal-table{ width:100%; border-collapse:collapse; font-family:Arial,sans-serif; font-size:12.5px; margin:6px 0 14px; }
+  .cal-table th{ background:#555; color:#fff; font-size:11px; letter-spacing:0.5px; padding:7px 8px; text-align:center; }
+  .cal-table td{ padding:6px 8px; text-align:center; border-bottom:1px solid #fff; }
+  .cal-table td.intake{ background:#555; color:#fff; font-weight:700; }
+  .cal-table td.hname{ font-weight:700; color:var(--navy); }
+  .cal-table .l12{ background:#FFD0D0; } .cal-table .l3{ background:#C8F5DE; } .cal-table .l4{ background:#D2F7FF; } .cal-table .l5{ background:#E4D3FF; }
+  .cal-table .h1{ background:#FFD0D0; } .cal-table .h2{ background:#FFD9B8; } .cal-table .h3{ background:#C8F5DE; } .cal-table .h4{ background:#D2F7FF; } .cal-table .h5{ background:#E4D3FF; }
+  .cal-sub{ font-family:Arial,sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--red); margin:16px 0 6px; }
+  .cal-notes{ font-family:Arial,sans-serif; font-size:12.5px; line-height:1.7; margin:0; padding-inline-start:20px; }
+  .cal-print{ page-break-before:always; break-before:page; }
   html[dir="rtl"] .quote-doc td.amt{ text-align:start; }
   html[dir="rtl"] .quote-doc .qhead .meta{ text-align:start; }
 
@@ -282,6 +296,12 @@ select,input[type=text],input[type=number]{background:#fbf7ee;border-radius:8px}
         <label for="needVisa" data-i18n="need_visa_label"></label>
       </div>
     </div>
+
+    <details class="pep-cal" id="pepCal">
+      <summary data-i18n="cal_heading"></summary>
+      <p class="hint" data-i18n="cal_hint"></p>
+      <div id="pepCalBody"></div>
+    </details>
   </div>
 
   <div class="step hidden" id="examSection">
@@ -444,6 +464,11 @@ select,input[type=text],input[type=number]{background:#fbf7ee;border-radius:8px}
     <ul id="pIncludes"></ul>
     <h3 id="pNotesHeading" class="hidden" data-i18n="print_notes"></h3>
     <ul id="pNotes" class="hidden"></ul>
+
+    <div id="pCalWrap" class="hidden cal-print">
+      <h3 data-i18n="cal_heading"></h3>
+      <div id="pCal"></div>
+    </div>
 
     <div class="footnote">
       <span id="pFootnote"></span><br><br>
@@ -1412,6 +1437,131 @@ fr: {
 }
 };
 
+/* ---------------- PEP ACADEMIC CALENDAR 2027 (source: PEP AC2007 ALCK.PG 101126) ---------------- */
+const PEP_CAL = [
+  { code:'PEP 1026', rows:[['12','2026-12-07','2027-02-02'],['3','2026-12-07','2027-01-15'],['4','2027-01-19','2027-02-22'],['5','2027-02-24','2027-03-30']] },
+  { code:'PEP 0127', rows:[['12','2027-02-04','2027-03-29'],['3','2027-02-04','2027-03-15'],['4','2027-03-17','2027-04-13'],['5','2027-04-15','2027-05-13']] },
+  { code:'PEP 0227', rows:[['12','2027-03-31','2027-05-12'],['3','2027-03-31','2027-04-27'],['4','2027-04-29','2027-05-31'],['5','2027-06-02','2027-06-30']] },
+  { code:'PEP 0327', rows:[['12','2027-05-14','2027-06-29'],['3','2027-05-14','2027-06-15'],['4','2027-06-17','2027-07-14'],['5','2027-07-16','2027-08-12']] },
+  { code:'PEP 0427', rows:[['12','2027-07-01','2027-08-11'],['3','2027-07-01','2027-07-28'],['4','2027-07-30','2027-08-26'],['5','2027-09-01','2027-09-30']] },
+  { code:'PEP 0527', rows:[['12','2027-08-13','2027-09-29'],['3','2027-08-13','2027-09-13'],['4','2027-09-15','2027-10-14'],['5','2027-10-18','2027-11-16']] },
+  { code:'PEP 0627', rows:[['12','2027-10-01','2027-11-15'],['3','2027-10-01','2027-11-01'],['4','2027-11-03','2027-11-30'],['5','2027-12-02','2028-01-06']] },
+  { code:'PEP 0727', rows:[['12','2027-11-17','2028-01-05'],['3','2027-11-17','2027-12-14'],['4','2027-12-16','2028-01-20']] }
+];
+const PEP_CAL_HOLIDAYS = [
+  ['yearend1','2026-12-21','2027-01-01',1], ['thaipusam','2027-01-22',null,1], ['fed','2027-02-01',null,1], ['cny','2027-02-05','2027-02-09',1],
+  ['aidilfitri','2027-03-08','2027-03-12',2], ['haji','2027-05-17',null,2],
+  ['agong','2027-06-07',null,3], ['national','2027-08-31',null,3],
+  ['malaysia','2027-09-16',null,4], ['deepavali','2027-10-28','2027-10-29',4],
+  ['yearend2','2027-12-24','2027-12-31',5]
+];
+const PEP_CAL_EXAMPLE = [
+  ['PEP 1026','1','2026-12-07','2027-02-02','na'], ['PEP 0127','2','2027-02-04','2027-03-29','3.0 – 4.0'],
+  ['PEP 0227','3','2027-03-31','2027-04-27','4.0 – 5.0'], ['PEP 0227','4','2027-04-29','2027-05-31','5.5 – 6.0'],
+  ['PEP 0227','5','2027-06-02','2027-06-30','6.5+']
+];
+Object.assign(T.en, {
+  cal_heading:"PEP Academic Calendar 2027",
+  cal_hint:"General intakes for both online and face-to-face PEP classes. Tap to expand.",
+  cal_col_intake:"Intake", cal_col_level:"Level", cal_col_start:"Start Date", cal_col_end:"End Date", cal_col_date:"Date",
+  cal_col_ielts:"IELTS Bands and Equivalent", cal_na:"N/A",
+  cal_holidays:"Planned Holidays", cal_notes_title:"Notes", cal_example_title:"Example: progression from one level to the next",
+  cal_h_yearend1:"Year-End Break (2026–2027)", cal_h_thaipusam:"Thaipusam", cal_h_fed:"Federal Territory Day", cal_h_cny:"Chinese New Year",
+  cal_h_aidilfitri:"Hari Raya Aidilfitri", cal_h_haji:"Hari Raya Haji", cal_h_agong:"Agong's Birthday", cal_h_national:"National Day",
+  cal_h_malaysia:"Malaysia Day", cal_h_deepavali:"Deepavali", cal_h_yearend2:"Year-End Break (2027)",
+  cal_notes:[
+    "A total of seven (7) intakes will be conducted, commencing on 7 December 2026 and ending on 20 January 2028.",
+    "Levels 1 and 2 will follow a 30-day intake cycle, while Levels 3, 4, and 5 will follow a 20-day intake cycle. Consequently, the various levels may have different intake schedules, with their respective commencement and completion dates staggered accordingly.",
+    "Face-to-face classes will be conducted for six (6) hours per day from Monday to Thursday and three (3) hours on Friday. Online classes, on the other hand, will be conducted for three (3) hours per day, from Monday to Friday.",
+    "These are the general intakes applicable to both online and face-to-face PEP classes.",
+    "A minimum enrolment of five (5) learners is required for each level to proceed. If the minimum enrolment requirement is not met, the respective level will not be opened.",
+    "Special intakes may be arranged accordingly to accommodate specific requests, subject to sufficient enrolment numbers and manpower.",
+    "The scheduled holidays will be observed by students. Staff members who wish to observe these holidays are also welcome to do so.",
+    "An example illustrating the progression from one level to the next is provided below."
+  ]
+});
+Object.assign(T.ar, {
+  cal_heading:"التقويم الأكاديمي لبرنامج PEP لعام 2027",
+  cal_hint:"الدفعات العامة لفصول PEP الحضورية وعبر الإنترنت. اضغط للتوسيع.",
+  cal_col_intake:"الدفعة", cal_col_level:"المستوى", cal_col_start:"تاريخ البدء", cal_col_end:"تاريخ الانتهاء", cal_col_date:"التاريخ",
+  cal_col_ielts:"نطاقات IELTS وما يعادلها", cal_na:"غير متاح",
+  cal_holidays:"العطلات المقررة", cal_notes_title:"ملاحظات", cal_example_title:"مثال: التدرج من مستوى إلى المستوى التالي",
+  cal_h_yearend1:"إجازة نهاية العام (2026–2027)", cal_h_thaipusam:"ثايبوسام", cal_h_fed:"يوم الإقليم الاتحادي", cal_h_cny:"رأس السنة الصينية",
+  cal_h_aidilfitri:"عيد الفطر (هاري رايا عيد الفطر)", cal_h_haji:"عيد الأضحى (هاري رايا حاجي)", cal_h_agong:"عيد ميلاد الملك (أغونغ)", cal_h_national:"اليوم الوطني",
+  cal_h_malaysia:"يوم ماليزيا", cal_h_deepavali:"ديباولي", cal_h_yearend2:"إجازة نهاية العام (2027)",
+  cal_notes:[
+    "سيُعقد ما مجموعه سبع (7) دفعات، تبدأ في 7 ديسمبر 2026 وتنتهي في 20 يناير 2028.",
+    "تتبع المستويان 1 و2 دورة قبول مدتها 30 يومًا، بينما تتبع المستويات 3 و4 و5 دورة قبول مدتها 20 يومًا. وبناءً على ذلك، قد تختلف مواعيد الدفعات بين المستويات، وتكون تواريخ البدء والانتهاء الخاصة بكل مستوى متدرجة وفقًا لذلك.",
+    "تُعقد الدروس الحضورية ست (6) ساعات يوميًا من الاثنين إلى الخميس وثلاث (3) ساعات يوم الجمعة. أما الدروس عبر الإنترنت فتُعقد ثلاث (3) ساعات يوميًا من الاثنين إلى الجمعة.",
+    "هذه هي الدفعات العامة المطبّقة على فصول PEP الحضورية وعبر الإنترنت على حدٍّ سواء.",
+    "يُشترط حدٌّ أدنى من خمسة (5) متعلمين لكل مستوى حتى يُفتح. وإذا لم يُستوفَ الحد الأدنى، فلن يُفتح المستوى المعني.",
+    "يمكن ترتيب دفعات خاصة لتلبية طلبات محددة، بشرط توفر عدد كافٍ من المسجلين والكوادر.",
+    "يلتزم الطلاب بالعطلات المجدولة. ويُرحَّب كذلك بالموظفين الراغبين في الالتزام بهذه العطلات.",
+    "يوضح المثال أدناه التدرج من مستوى إلى المستوى التالي."
+  ]
+});
+Object.assign(T.zh, {
+  cal_heading:"PEP 2027 学年日历",
+  cal_hint:"适用于 PEP 线上及面授课程的统一入学批次。点击展开。",
+  cal_col_intake:"批次", cal_col_level:"级别", cal_col_start:"开始日期", cal_col_end:"结束日期", cal_col_date:"日期",
+  cal_col_ielts:"雅思分数及对应水平", cal_na:"不适用",
+  cal_holidays:"计划假期", cal_notes_title:"备注", cal_example_title:"示例：从一个级别升入下一级别的进度",
+  cal_h_yearend1:"年终假期（2026–2027）", cal_h_thaipusam:"大宝森节", cal_h_fed:"联邦直辖区日", cal_h_cny:"农历新年",
+  cal_h_aidilfitri:"开斋节", cal_h_haji:"哈芝节（宰牲节）", cal_h_agong:"最高元首诞辰", cal_h_national:"国庆日",
+  cal_h_malaysia:"马来西亚日", cal_h_deepavali:"屠妖节", cal_h_yearend2:"年终假期（2027）",
+  cal_notes:[
+    "共将举办七（7）个入学批次，自2026年12月7日开始，至2028年1月20日结束。",
+    "第1级和第2级采用30天的入学周期，第3、4、5级采用20天的入学周期。因此各级别的入学时间表可能不同，各自的开课与结课日期将相应错开。",
+    "面授课程周一至周四每天六（6）小时，周五三（3）小时。线上课程则周一至周五每天三（3）小时。",
+    "以上为适用于 PEP 线上及面授课程的统一入学批次。",
+    "每个级别须至少有五（5）名学员报名方可开班。若未达到最低报名人数，该级别将不开班。",
+    "可根据特定需求安排特别批次，但须有足够的报名人数及师资。",
+    "学员须遵守已安排的假期。有意遵守这些假期的员工亦可休假。",
+    "下方示例说明了从一个级别升入下一级别的进度。"
+  ]
+});
+Object.assign(T.fr, {
+  cal_heading:"Calendrier académique PEP 2027",
+  cal_hint:"Sessions générales pour les cours PEP en ligne et en présentiel. Touchez pour développer.",
+  cal_col_intake:"Session", cal_col_level:"Niveau", cal_col_start:"Date de début", cal_col_end:"Date de fin", cal_col_date:"Date",
+  cal_col_ielts:"Niveaux IELTS et équivalents", cal_na:"S.O.",
+  cal_holidays:"Jours fériés prévus", cal_notes_title:"Remarques", cal_example_title:"Exemple : progression d'un niveau au suivant",
+  cal_h_yearend1:"Pause de fin d'année (2026–2027)", cal_h_thaipusam:"Thaipusam", cal_h_fed:"Jour du Territoire fédéral", cal_h_cny:"Nouvel An chinois",
+  cal_h_aidilfitri:"Hari Raya Aidilfitri (Aïd el-Fitr)", cal_h_haji:"Hari Raya Haji (Aïd el-Adha)", cal_h_agong:"Anniversaire de l'Agong", cal_h_national:"Fête nationale",
+  cal_h_malaysia:"Journée de la Malaisie", cal_h_deepavali:"Deepavali", cal_h_yearend2:"Pause de fin d'année (2027)",
+  cal_notes:[
+    "Au total, sept (7) sessions d'admission auront lieu, du 7 décembre 2026 au 20 janvier 2028.",
+    "Les niveaux 1 et 2 suivent un cycle d'admission de 30 jours, tandis que les niveaux 3, 4 et 5 suivent un cycle de 20 jours. Par conséquent, les calendriers d'admission peuvent différer selon les niveaux, leurs dates de début et de fin étant échelonnées en conséquence.",
+    "Les cours en présentiel ont lieu six (6) heures par jour du lundi au jeudi et trois (3) heures le vendredi. Les cours en ligne ont lieu trois (3) heures par jour, du lundi au vendredi.",
+    "Il s'agit des sessions générales applicables aux cours PEP en ligne comme en présentiel.",
+    "Un minimum de cinq (5) apprenants est requis pour chaque niveau afin qu'il ait lieu. Si ce minimum n'est pas atteint, le niveau concerné ne sera pas ouvert.",
+    "Des sessions spéciales peuvent être organisées pour répondre à des demandes particulières, sous réserve d'un nombre d'inscrits et de ressources humaines suffisants.",
+    "Les jours fériés programmés sont observés par les étudiants. Les membres du personnel qui souhaitent les observer sont également les bienvenus.",
+    "Un exemple illustrant la progression d'un niveau au suivant est présenté ci-dessous."
+  ]
+});
+const calFmt = iso => { const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString(({en:'en-MY', ar:'ar-MY', zh:'zh-CN', fr:'fr-FR'})[state.lang] || 'en-MY', {day:'numeric', month:'short', year:'numeric'}); };
+const calRange = (a,b) => b ? `${calFmt(a)} – ${calFmt(b)}` : calFmt(a);
+function buildPepCalHTML(){
+  const lv = k => k==='12' ? '1 & 2' : k;
+  let h = `<table class="cal-table"><thead><tr><th>${tr('cal_col_intake')}</th><th>${tr('cal_col_level')}</th><th>${tr('cal_col_start')}</th><th>${tr('cal_col_end')}</th></tr></thead><tbody>`;
+  PEP_CAL.forEach(g=>{ g.rows.forEach((r,i)=>{
+    h += `<tr>${i===0 ? `<td class="intake" rowspan="${g.rows.length}">${g.code}</td>` : ''}<td class="l${r[0]}">${lv(r[0])}</td><td class="l${r[0]}">${calFmt(r[1])}</td><td class="l${r[0]}">${calFmt(r[2])}</td></tr>`;
+  }); });
+  h += `</tbody></table>`;
+  h += `<div class="cal-sub">${tr('cal_holidays')}</div><table class="cal-table"><thead><tr><th>${tr('cal_holidays')}</th><th>${tr('cal_col_date')}</th></tr></thead><tbody>`;
+  PEP_CAL_HOLIDAYS.forEach(x=>{ h += `<tr><td class="hname h${x[3]}">${tr('cal_h_'+x[0])}</td><td class="h${x[3]}">${calRange(x[1],x[2])}</td></tr>`; });
+  h += `</tbody></table>`;
+  h += `<div class="cal-sub">${tr('cal_notes_title')}</div><ol class="cal-notes">${tr('cal_notes').map(n=>`<li>${n}</li>`).join('')}</ol>`;
+  h += `<div class="cal-sub">${tr('cal_example_title')}</div><table class="cal-table"><thead><tr><th>${tr('cal_col_intake')}</th><th>${tr('cal_col_level')}</th><th>${tr('cal_col_start')}</th><th>${tr('cal_col_end')}</th><th>${tr('cal_col_ielts')}</th></tr></thead><tbody>`;
+  PEP_CAL_EXAMPLE.forEach(r=>{ h += `<tr><td class="intake">${r[0]}</td><td class="l${r[1]==='1'||r[1]==='2'?'12':r[1]}">${r[1]}</td><td class="l${r[1]==='1'||r[1]==='2'?'12':r[1]}">${calFmt(r[2])}</td><td class="l${r[1]==='1'||r[1]==='2'?'12':r[1]}">${calFmt(r[3])}</td><td class="l${r[1]==='1'||r[1]==='2'?'12':r[1]}">${r[4]==='na' ? tr('cal_na') : r[4]}</td></tr>`; });
+  h += `</tbody></table>`;
+  return h;
+}
+function renderPepCal(){
+  document.getElementById('pepCalBody').innerHTML = buildPepCalHTML();
+}
+
 let state = { lang:'en', programme:null, startLevel:1, targetLevel:5, mode:null, track:null, examGroup:null, examSpecific:null, examRegOption:false, edutourism:false, docType:'quote', needVisa:true, clsLang:null, clsFormat:null, clsPackage:null, clsSize:2, clsHours:10, clsCompare:false, agProg:null, agStart:1, agEnd:10, agVisa:true };
 const isCompare = () => state.programme==='class' && state.clsFormat==='1to1' && state.clsCompare;
 const tr = key => T[state.lang][key] !== undefined ? T[state.lang][key] : T.en[key];
@@ -1950,6 +2100,9 @@ function renderQuoteDoc(data){
   ['pIncludesHeading','pIncludes'].forEach(id=>document.getElementById(id).classList.toggle('hidden', isCls));
   ['pNotesHeading','pNotes'].forEach(id=>document.getElementById(id).classList.toggle('hidden', !isCls));
   document.getElementById('pNotes').innerHTML = isAg ? ['ag_note_fulltime','ag_note_levels','ag_note_session','ag_note_place','ag_note_book'].map(k=>`<li>${tr(k)}</li>`).join('') : (isKids ? kidsNotes(data).map(i=>`<li>${i}</li>`).join('') : isCls ? buildClassNotes(data).map(i=>`<li>${i}</li>`).join('') : '');
+  const isPep = data.programme==='pep';
+  document.getElementById('pCalWrap').classList.toggle('hidden', !isPep);
+  document.getElementById('pCal').innerHTML = isPep ? buildPepCalHTML() : '';
   document.getElementById('pFootnote').textContent = tr(isAg ? 'print_footnote_ag' : isKids ? 'print_footnote_kids' : isCls ? 'print_footnote_cls' : 'print_footnote');
 }
 
@@ -2052,6 +2205,7 @@ function renderAll(){
   renderAgCards();
   renderClassCards();
   renderKidsSection();
+  renderPepCal();
   if(state.examGroup) renderExamSpecificSelect();
   updateSummary();
   updateDocTypeUI();
@@ -2087,6 +2241,8 @@ document.getElementById('splitBtn').addEventListener('click', ()=>{
 
 /* ---------------- QUICK REPLIES ---------------- */
 const QR_DEFAULTS = [
+ {id:'pep_intakes', title:'PEP intake dates 2027', kw:'intake start date dates calendar when next january february march april may june july beginner level 1 موعد مواعيد بداية',
+  text:()=>`PEP 2027 intakes (Levels 1 & 2 start dates; Levels 3, 4 and 5 start on their own 20-day cycle):\n`+PEP_CAL.map(g=>{const r=g.rows[0];return `• ${g.code}: ${calFmt(r[1])} – ${calFmt(r[2])}`;}).join('\n')+`\n\nLevels 1–2 run on a 30-day cycle, Levels 3–5 on a 20-day cycle. A minimum of 5 learners is required for a level to open. Special intakes can be arranged subject to enrolment numbers and manpower. Scheduled public holidays are observed.`},
  {id:'classsize', title:'Class size', kw:'class size maximum student many group people number عدد طلاب الطلاب',
   text:()=>`Our classes have a maximum of 10 to 15 students, depending on the class.`},
  {id:'online_vs_f2f', title:'Online vs face-to-face (hours & content)', kw:'online face difference hour total study same content why less longer اونلاين أونلاين حضوري ساعات فرق',
